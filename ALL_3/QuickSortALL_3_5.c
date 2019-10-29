@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Stała decydująca o zmiania algorytmu sortowania na bąbelkowe
+#define threshold 3
+
 void swap(int *a, int *b) {
   int tmp = *a;
   *a = *b;
@@ -21,13 +24,20 @@ void printArray(int *array, int arrayLength) {
 // Zamienia indeks tablicowy z konwencji [1 ... n] na [0 ... n - 1]
 int get(int index) { return index - 1; }
 
+void bubbleSort(int *A, int leftBound, int rightBound) {
+  for (int i = 0; i < rightBound - 1; i++)
+    for (int j = leftBound; j < rightBound - i - 1; j++)
+      if (A[get(j)] > A[get(j + 1)])
+        swap(&A[get(j)], &A[get(j + 1)]);
+}
+
 int Partition(int *A, int leftBound, int rigthBound) {
   int pivot = A[get(rigthBound)];
   int i = leftBound - 1;
   for (int j = leftBound; j <= rigthBound; j++) {
     if (A[get(j)] <= pivot) {
       i++;
-      swap(&(A[get(i)]), &(A[get(j)]));
+      swap(&A[get(i)], &A[get(j)]);
     }
   }
   if (i < rigthBound) return i;
@@ -35,10 +45,13 @@ int Partition(int *A, int leftBound, int rigthBound) {
 }
 
 void Quicksort(int *A, int leftBound, int rigthBound) {
-  if (leftBound < rigthBound) {
-    int division = Partition(A, leftBound, rigthBound);
-    Quicksort(A, leftBound, division);
-    Quicksort(A, division + 1, rigthBound);
+  // threshold - stała która decyduje o zmiania algorytmu sortowania
+  if (rigthBound - leftBound + 1 < threshold) {
+      bubbleSort(A, leftBound, rigthBound);
+    } else {
+      int division = Partition(A, leftBound, rigthBound);
+      Quicksort(A, leftBound, division);
+      Quicksort(A, division + 1, rigthBound);
   }
 }
 
@@ -67,7 +80,7 @@ int main(int argc, char **argv) {
   // Wczytywanie danych
   rewind(fp);
   for (int i = 0; i < arrayLength; i++) {
-    fscanf(fp, "%d\n", &(array[i]));
+    fscanf(fp, "%d\n", &array[i]);
   }
 
   Quicksort(array, 1, arrayLength);
