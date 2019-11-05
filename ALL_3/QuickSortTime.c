@@ -30,7 +30,8 @@ int get(int index) { return index - 1; }
 void bubbleSort(int *A, int leftBound, int rightBound) {
   for (int i = 0; i < rightBound; i++)
     for (int j = leftBound; j < rightBound - i; j++)
-      if (A[get(j)] > A[get(j + 1)]) swap(&A[get(j)], &A[get(j + 1)]);
+      if (A[get(j)] > A[get(j + 1)])
+        swap(&A[get(j)], &A[get(j + 1)]);
 }
 
 int Partition(int *A, int leftBound, int rightBound) {
@@ -60,7 +61,7 @@ void Quicksort(int *A, int leftBound, int rightBound) {
 // Quicksort zmodyfikowany
 void QuickBubbleSort(int *A, int leftBound, int rightBound) {
   // threshold - stała która decyduje o zmiania algorytmu sortowania
-  if (rightBound - leftBound + 1 < threshold) {
+  if (rightBound - leftBound + 1 <= threshold) {
     bubbleSort(A, leftBound, rightBound);
   } else {
     int division = Partition(A, leftBound, rightBound);
@@ -86,9 +87,9 @@ void fillArrayDeclining(int *array, int arrayLength) {
 
 int main(int argc, char **argv) {
   struct timespec tp0, tp1;
-  int arrayLength = 1000; // Rozmiar testów
-  int numberOfTests = arrayLength * 2;   // Liczba testów
-  threshold = 20;
+  int arrayLength = 1500; // Rozmiar testów
+  int numberOfTests = 1000; //arrayLength * 2;   // Liczba testów
+  threshold = 50;
   double totalTime1 = 0;
   double totalTime2 = 0;
   int *array1 = calloc(arrayLength, sizeof(int));
@@ -97,8 +98,8 @@ int main(int argc, char **argv) {
 
   // Powtarzanie testów, wyliczanie średniego czasu
   for (int i = 0; i < numberOfTests; i++) {
-    fillArrayRandom(array1, arrayLength);
-    // fillArrayDeclining(array1, arrayLength);
+    // fillArrayRandom(array1, arrayLength);
+    fillArrayDeclining(array1, arrayLength);
 
     // Duplikowanie zawartości array1 do array2
     for (int j = 0; j < arrayLength; j++) {
@@ -119,6 +120,8 @@ int main(int argc, char **argv) {
     totalTime2 +=
       (tp1.tv_sec + tp1.tv_nsec / MLD) - (tp0.tv_sec + tp0.tv_nsec / MLD);
   }
+
+  // printArray(array2, arrayLength);
   printf("Podstawowy:    %lf \n", totalTime1 / numberOfTests);
   printf("Zmodyfikowany: %lf \n", totalTime2 / numberOfTests);
 

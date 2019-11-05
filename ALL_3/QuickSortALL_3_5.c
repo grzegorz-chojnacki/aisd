@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 // Stała decydująca o zmiania algorytmu sortowania na bąbelkowe
-#define threshold 3
+int threshold;
 
 void swap(int *a, int *b) {
   int tmp = *a;
@@ -25,10 +25,9 @@ void printArray(int *array, int arrayLength) {
 int get(int index) { return index - 1; }
 
 void bubbleSort(int *A, int leftBound, int rightBound) {
-  for (int i = 0; i < rightBound - 1; i++)
-    for (int j = leftBound; j < rightBound - i - 1; j++)
-      if (A[get(j)] > A[get(j + 1)])
-        swap(&A[get(j)], &A[get(j + 1)]);
+  for (int i = 0; i < rightBound; i++)
+    for (int j = leftBound; j < rightBound - i; j++)
+      if (A[get(j)] > A[get(j + 1)]) swap(&A[get(j)], &A[get(j + 1)]);
 }
 
 int Partition(int *A, int leftBound, int rigthBound) {
@@ -40,20 +39,33 @@ int Partition(int *A, int leftBound, int rigthBound) {
       swap(&A[get(i)], &A[get(j)]);
     }
   }
-  if (i < rigthBound) return i;
-  else return i - 1;
+  if (i < rigthBound)
+    return i;
+  else
+    return i - 1;
 }
 
-void Quicksort(int *A, int leftBound, int rigthBound) {
-  // threshold - stała która decyduje o zmiania algorytmu sortowania
-  if (rigthBound - leftBound + 1 < threshold) {
-      bubbleSort(A, leftBound, rigthBound);
-    } else {
-      int division = Partition(A, leftBound, rigthBound);
-      Quicksort(A, leftBound, division);
-      Quicksort(A, division + 1, rigthBound);
+// Quicksort podstawowy
+void Quicksort(int *A, int leftBound, int rightBound) {
+  if (leftBound < rightBound) {
+    int division = Partition(A, leftBound, rightBound);
+    Quicksort(A, leftBound, division);
+    Quicksort(A, division + 1, rightBound);
   }
 }
+
+// Quicksort zmodyfikowany
+void QuickBubbleSort(int *A, int leftBound, int rightBound) {
+  // threshold - stała która decyduje o zmiania algorytmu sortowania
+  if (rightBound - leftBound + 1 < threshold) {
+    bubbleSort(A, leftBound, rightBound);
+  } else {
+    int division = Partition(A, leftBound, rightBound);
+    QuickBubbleSort(A, leftBound, division);
+    QuickBubbleSort(A, division + 1, rightBound);
+  }
+}
+
 
 int main(int argc, char **argv) {
   // Otwarcie pliku
@@ -64,7 +76,7 @@ int main(int argc, char **argv) {
   }
 
   // Liczenie długości pliku / potrzebnej tablicy
-  int arrayLength = 1; // Ostatnia linia jest zakończona EOF zamiast '\n'
+  int arrayLength = 1;  // Ostatnia linia jest zakończona EOF zamiast '\n'
   for (char c = getc(fp); c != EOF; c = getc(fp)) {
     if (c == '\n') arrayLength++;
   }
@@ -76,6 +88,7 @@ int main(int argc, char **argv) {
 
   // Przygotowanie tablicy na dane
   int *array = calloc(arrayLength, sizeof(int));
+  threshold = 20;
 
   // Wczytywanie danych
   rewind(fp);
@@ -83,7 +96,7 @@ int main(int argc, char **argv) {
     fscanf(fp, "%d\n", &array[i]);
   }
 
-  Quicksort(array, 1, arrayLength);
+  QuickBubbleSort(array, 1, arrayLength);
   printArray(array, arrayLength);
 
   // Zapis do pliku
