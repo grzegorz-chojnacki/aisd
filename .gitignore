@@ -1,3 +1,7 @@
+# Junk Files
+*.zip
+*.pdf
+
 # Test data
 *.txt
 
