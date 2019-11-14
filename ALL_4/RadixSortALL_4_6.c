@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define RANGE 128
+// Zakres Ascii dla tablicy liczników "C"
+#define RANGE 256
 
 typedef struct {
   char *content;
@@ -22,7 +23,7 @@ int getSmallCase(char c) {
     return c;
 }
 
-// letter (0 <-> wordLength - 1)
+// Zmienna letter jest indeksem litery w napisie (0 ... n - 1)
 void countingSort(Array *A, Word *B, int letter) {
   int *C = (int *)calloc(RANGE, sizeof(int));
 
@@ -65,26 +66,22 @@ void RadixSort(Array *A) {
   }
 }
 
-int main() {
-  FILE *fp = fopen("nazwiskaASCII.txt", "r");
-  if (fp == NULL) {
-    printf("Nie znaleziono pliku z nazwiskami");
-    return 1;
-  }
+// Sprawdza też, czy plik zawiera znaki spoza zakresu ASCII
+void setAttributes(FILE *fp, Array *A) {
+  A->length = 0;
+  A->longestWordLength = 0;
 
-  // Tablice na nazwiska
-  Array names;
-
-  names.length = 0;
-  names.longestWordLength = 0;
   int wordLength = 0;
-
   // Zliczanie ilości nazwisk w pliku i ich najdłuższej możliwej długości
   for (char c = getc(fp); c != EOF; c = getc(fp)) {
+    if (c < 0 || c >= 256) {
+      printf("Plik zawiera znaki spoza zestawu ASCII\n");
+      exit(2);
+    }
     if (c == '\n') {
-      names.length++;
-      if (wordLength > names.longestWordLength) {
-        names.longestWordLength = wordLength;
+      A->length++;
+      if (wordLength > A->longestWordLength) {
+        A->longestWordLength = wordLength;
       }
       wordLength = 0;
     } else {
@@ -92,28 +89,46 @@ int main() {
     }
   }
   rewind(fp);
+  A->items = (Word *)calloc(A->length, sizeof(Word));
+}
 
-  names.items = (Word *)calloc(names.length, sizeof(Word));
-
-  // Wczytywanie nazwisk
-  for (int i = 0; i < names.length; i++) {
-    char *word = (char *)calloc(names.longestWordLength + 1, sizeof(char));
+void loadNames(FILE *fp, Array *A) {
+  int wordLength;
+  for (int i = 0; i < A->length; i++) {
+    char *word = (char *)calloc(A->longestWordLength + 1, sizeof(char));
     fscanf(fp, "%s\n", word);
-    int wordLength = strlen(word);
-    names.items[i].content = (char *)calloc(wordLength + 1, sizeof(char));
-    strcpy(names.items[i].content, word);
-    names.items[i].length = wordLength;
+    wordLength = strlen(word);
+
+    A->items[i].content = (char *)calloc(wordLength + 1, sizeof(char));
+    A->items[i].length = wordLength;
+    strcpy(A->items[i].content, word);
   }
+}
+
+int main() {
+  FILE *fp = fopen("nazwiskaASCII.txt", "r");
+  if (fp == NULL) {
+    printf("Nie znaleziono pliku z nazwiskami");
+    return 1;
+  }
+
+  // Tablica na nazwiska
+  Array names;
+
+  // Wczytywanie
+  setAttributes(fp, &names);
+  loadNames(fp, &names);
+  fclose(fp);
 
   // Sortowanie
   RadixSort(&names);
-  fclose(fp);
 
+  // Zapis do pliku
   fp = fopen("RadixSort.txt", "w");
   for (int i = 0; i < names.length; i++) {
     fprintf(fp, "%s\n", names.items[i]);
   }
-  fclose(fp);
 
+  fclose(fp);
   return 0;
 }
