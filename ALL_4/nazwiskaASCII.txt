@@ -2998,7 +2998,7 @@ Ziolo
 Mieszkowski
 Jastrzab
 Sulkowski
-Müller
+Muller
 Slaby
 Matyjaszczyk
 Golanski
@@ -8125,7 +8125,7 @@ Matejuk
 Maly
 Lochowski
 Lorkowski
-Krüger
+Kruger
 Jasniewski
 Jachowski
 Dyszkiewicz
@@ -16581,7 +16581,7 @@ Lichacz
 Lechwar
 Lamik
 Kulawiec
-Kühn
+Kuhn
 Kuchniak
 Krzaczynski
 Kozdrowski
@@ -17147,7 +17147,7 @@ Smaruj
 Slawuta
 Siemiaszko
 Sermak
-Schröder
+Schroder
 Rycerski
 Ruszewski
 Rejak
@@ -17267,7 +17267,7 @@ Kielinski
 Karpisz
 Kabata
 Glomski
-Fröhlich
+Frohlich
 Fresko
 Dzugaj
 Drapacz
@@ -17860,7 +17860,7 @@ Chrapusta
 Chochowski
 Ches
 Brynda
-Böhm
+Bohm
 Bogdanik
 Bielejewski
 Becela
