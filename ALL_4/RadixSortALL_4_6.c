@@ -57,7 +57,7 @@ void countingSort(Array *A, Word *B, int letter) {
 
 void RadixSort(Array *A) {
   Word *B = (Word *)calloc(A->length, sizeof(Word));
-  for (int i = A->longestWordLength - 1; i >= 0; i--) {
+  for (int i = A->longestWordLength; i >= 0; i--) {
     countingSort(A, B, i);
     // Zapisywanie pośrednio posortowanych danych do pierwotnej tablicy
     for (int i = 0; i < A->length; i++) {
@@ -94,12 +94,13 @@ void setAttributes(FILE *fp, Array *A) {
 
 void loadNames(FILE *fp, Array *A) {
   int wordLength;
+  char *word = (char *)calloc(A->longestWordLength, sizeof(char));
+  
   for (int i = 0; i < A->length; i++) {
-    char *word = (char *)calloc(A->longestWordLength + 1, sizeof(char));
     fscanf(fp, "%s\n", word);
     wordLength = strlen(word);
 
-    A->items[i].content = (char *)calloc(wordLength + 1, sizeof(char));
+    A->items[i].content = (char *)calloc(wordLength, sizeof(char));
     A->items[i].length = wordLength;
     strcpy(A->items[i].content, word);
   }
@@ -126,7 +127,7 @@ int main() {
   // Zapis do pliku
   fp = fopen("RadixSort.txt", "w");
   for (int i = 0; i < names.length; i++) {
-    fprintf(fp, "%s\n", names.items[i]);
+    fprintf(fp, "%s\n", names.items[i].content);
   }
 
   fclose(fp);
