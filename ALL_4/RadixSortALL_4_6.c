@@ -5,12 +5,12 @@
 // Zakres Ascii dla tablicy liczników "C"
 #define RANGE 256
 
-typedef struct {
+typedef struct Word {
   char *content;
   int length;
 } Word;
 
-typedef struct {
+typedef struct Array {
   Word *items;
   int length;
   int longestWordLength;
