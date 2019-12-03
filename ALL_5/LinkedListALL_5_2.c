@@ -22,9 +22,13 @@ List *init() {
 // Znalezienie i pobranie wskaźnika na pierwszy element o zadanym kluczu "s"
 List *get(List *L, char *s) {
   List *node = L->next;
-  while (node != L && strcmp(node->key, s) != 0) {
+  L->key = s;
+  while (strcmp(node->key, s) != 0) {
     node = node->next;
   }
+  L->key = NIL;
+  // Zwraca wskaźnik na odpowiedni element, bądź na wartownika, jeżeli
+  // nie znaleziono klucza (wartownik ma tymczasowo podmieniony klucz)
   return node;
 }
 
@@ -63,12 +67,7 @@ void add(List *L, char *s) {
   newItem->next = L->next;
   newItem->prev = L;
 
-  // Lista zawierająca tylko wartownika
-  if (L->next == L) {
-    L->prev = newItem;
-  } else {
-    L->next->prev = newItem;
-  }
+  L->next->prev = newItem;
   L->next = newItem;
 }
 
