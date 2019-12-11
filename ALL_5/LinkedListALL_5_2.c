@@ -78,6 +78,7 @@ void delete (List *L, char *s) {
 
   node->prev->next = node->next;
   node->next->prev = node->prev;
+  free(node);
 }
 
 // BEZPOWTÓRZEŃ(L)
@@ -120,6 +121,11 @@ List *merge(List *L1, List *L2) {
 
 // KASUJ(L)
 void clear(List *L) {
+  List *node = L->prev;
+  while (node != L) {
+    node = node->prev;
+    free(node->next);
+  }
   L->next = L;
   L->prev = L;
 }
@@ -181,9 +187,13 @@ int main() {
   printf("\n");
 
   // Test kasowania list:
-  printf("Kasowanie listy:\n  ");
+  printf("Kasowanie listy: (lista scalona)\n  ");
   clear(mergedList);
   print(mergedList);
+  printf("Kasowanie listy: (lista pusta)\n  ");
+  List *emptyList = init();
+  clear(emptyList);
+  print(emptyList);
   printf("\n");
 
   return 0;
