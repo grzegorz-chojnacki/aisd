@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Zmienna globalna dla operacji modulo funkcji hashujących
 int SIZE = 0;
 
 enum State { EMPTY, OCCUPIED, DELETED };
@@ -142,7 +143,7 @@ void printStats(HashTable *T) {
   double avg = (nonZeroCounter != 0) ? (double)sum / (double)nonZeroCounter : 0;
   printf(
       "- Ilosc zerowych pozycji w tablicy T: %d\n"
-      "- Maksimalna wartosc w T: %d\n"
+      "- Maksymalna wartosc w T: %d\n"
       "- Srednia wartosc pozycji niezerowych: %f\n",
       zeroCounter, max, avg);
   printf("\n");
@@ -160,8 +161,25 @@ void insert(HashTable *T, int hashFunction(unsigned long int, int), char *key) {
     }
     T->keys[index]->n++;
   }
-  printf("Zabrakło wolnych komórek dla funkcji hashującej\n");
-  exit(2);
+  // printf("Zabrakło wolnych komórek dla funkcji hashującej\n");
+  // exit(2);
+}
+
+void test(HashTable *T, FILE *fp, int currentSize) {
+  SIZE = currentSize;
+  char *string;
+  printf("SIZE = %d\n", SIZE);
+  T = init(SIZE);
+  // Wczytywanie 2 * SIZE danych do tablicy
+  for (int i = 0; i < SIZE * 2; i++) {
+    string = calloc(20, sizeof(char));
+    fscanf(fp, "%s\n", string);
+    insert(T, h_double, string);
+  }
+  rewind(fp);
+  // printAll(T);
+  printStats(T);
+  clear(T);
 }
 
 int main() {
@@ -173,26 +191,20 @@ int main() {
 
   int favorableSizes[] = {1021, 1489, 2137};
   int unfavorableSizes[] = {1024, 1260, 2520};
-  char *string;
   HashTable *T;
 
-  // Wczytywanie danych
-  test: {
-    SIZE = 21;
-    T = init(SIZE);
-    for (int i = 0; i < 15; i++) {
-      string = calloc(20, sizeof(char));
-      fscanf(fp, "%s\n", string);
-      insert(T, h_double, string);
-    }
-    rewind(fp);
-    printAll(T);
-    printStats(T);
-    clear(T);
+  // Testy dla rozmiarów sprzyjających
+  printf("### Rozmiar tablicy niesprzyjajacy (liczba zlozona):\n");
+  for (int i = 0; i < 3; i++) {
+    test(T, fp, favorableSizes[i]);
   }
+  printf("\n");
 
-
-
+  // Testy dla rozmiarów niesprzyjających
+  printf("### Rozmiar tablicy sprzyjajacy (liczba pierwsza):\n");
+  for (int i = 0; i < 3; i++) {
+    test(T, fp, unfavorableSizes[i]);
+  }
 
   fclose(fp);
   return 0;
