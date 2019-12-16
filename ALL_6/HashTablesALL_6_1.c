@@ -189,7 +189,7 @@ int main() {
     return 1;
   }
 
-  int favorableSizes[] = {1021, 1489, 2137};
+  int favorableSizes[] = {1021, 1259, 2521};
   int unfavorableSizes[] = {1024, 1260, 2520};
   HashTable *T;
 
