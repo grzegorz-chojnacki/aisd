@@ -148,10 +148,10 @@ void printStats(HashTable *T) {
   printf("\n");
 }
 
-void insert(HashTable *T, char *key) {
+void insert(HashTable *T, int hashFunction(unsigned long int, int), char *key) {
   int index;
   for (int i = 0; i < T->length; i++) {
-    index = h_double(getStringCode(key), i);
+    index = hashFunction(getStringCode(key), i);
     if (T->keys[index]->state != OCCUPIED) {
       T->keys[index]->content = key;
       T->keys[index]->state = OCCUPIED;
@@ -183,10 +183,10 @@ int main() {
     for (int i = 0; i < 15; i++) {
       string = calloc(20, sizeof(char));
       fscanf(fp, "%s\n", string);
-      insert(T, string);
+      insert(T, h_double, string);
     }
     rewind(fp);
-
+    printAll(T);
     printStats(T);
     clear(T);
   }
