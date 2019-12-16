@@ -194,14 +194,14 @@ int main() {
   HashTable *T;
 
   // Testy dla rozmiarów sprzyjających
-  printf("### Rozmiar tablicy niesprzyjajacy (liczba zlozona):\n");
+  printf("### Rozmiar tablicy sprzyjajacy (liczby pierwsze):\n");
   for (int i = 0; i < 3; i++) {
     test(T, fp, favorableSizes[i]);
   }
   printf("\n");
 
   // Testy dla rozmiarów niesprzyjających
-  printf("### Rozmiar tablicy sprzyjajacy (liczba pierwsza):\n");
+  printf("### Rozmiar tablicy niesprzyjajacy (liczby zlozone):\n");
   for (int i = 0; i < 3; i++) {
     test(T, fp, unfavorableSizes[i]);
   }
