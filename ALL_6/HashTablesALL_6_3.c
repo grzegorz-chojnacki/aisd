@@ -85,22 +85,6 @@ void clear(HashTable *T) {
   T->length = 0;
 }
 
-// Wyświetl tę komórki tablicy, które zaweirają jakieś dane
-void print(HashTable *T) {
-  printf("HashTable:\n");
-  if (T->length == 0) {
-    printf("    (Pusta)\n\n");
-    return;
-  }
-
-  for (int i = 0; i < T->length; i++) {
-    if (T->keys[i]->state == OCCUPIED) {
-      printf("  %4d: %s\n", i, T->keys[i]->content);
-    }
-  }
-  printf("\n");
-}
-
 // Wyświetl wszystkie komórki tablicy i krotność prób ich zapisań (n)
 void printAll(HashTable *T) {
   printf("HashTable:\n");
@@ -137,9 +121,9 @@ void printStats(HashTable *T) {
   for (int i = 0; i < T->length; i++) {
     if (T->keys[i]->state == DELETED) numberOfDeleted++;
   }
-  printf("    Pierwotnie usunieto %d z %d elementow\n", (int)(T->length * 0.8),
+  printf("- Pierwotnie usunieto %d z %d elementow\n", (int)(T->length * 0.8),
          T->length);
-  printf("    Liczba pozostalych usunietych elementow: %d\n", numberOfDeleted);
+  printf("- Liczba pozostalych usunietych elementow: %d\n", numberOfDeleted);
   printf("\n");
 }
 
@@ -206,7 +190,7 @@ int main() {
   HashTable *T;
 
   // Testy dla rozmiarów sprzyjających
-  printf("### Rozmiar tablicy sprzyjajacy (liczby pierwsze):\n");
+  printf("#### Rozmiar tablicy sprzyjajacy (liczby pierwsze):\n");
   for (int i = 0; i < 3; i++) {
     test(T, fp, favorableSizes[i]);
   }
@@ -214,7 +198,7 @@ int main() {
   printf("\n");
 
   // Testy dla rozmiarów niesprzyjających
-  printf("### Rozmiar tablicy niesprzyjajacy (liczby zlozone):\n");
+  printf("#### Rozmiar tablicy niesprzyjajacy (liczby zlozone):\n");
   for (int i = 0; i < 3; i++) {
     test(T, fp, unfavorableSizes[i]);
   }
