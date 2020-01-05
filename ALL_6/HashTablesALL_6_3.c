@@ -121,7 +121,7 @@ void printStats(HashTable *T) {
   for (int i = 0; i < T->length; i++) {
     if (T->keys[i]->state == DELETED) numberOfDeleted++;
   }
-  printf("- Pierwotnie usunieto %d z %d elementow\n", (int)(T->length * 0.8),
+  printf("- Pierwotnie usunieto %d z %d elementow\n", (int)(T->length * 0.5),
          T->length);
   printf("- Liczba pozostalych usunietych elementow: %d\n", numberOfDeleted);
   printf("\n");

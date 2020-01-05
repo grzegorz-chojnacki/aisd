@@ -37,7 +37,7 @@ unsigned long int getStringCode(char *s) {
   int temp = 0;
   for (int i = 0; i <= strlen(s); i += 2) {
     code ^= temp;
-    temp = (s[i] * 256);
+    temp = (s[i] * 111);
     // Sprawdź czy skok 'i += 2' nie przeskoczył ostatniej litery
     // Jeżeli nie, to kontynuuj algorytm, jeżeli tak, to zwróć ostatni XOR
     if (i + 1 < strlen(s)) temp += s[i + 1];
@@ -45,16 +45,6 @@ unsigned long int getStringCode(char *s) {
   }
   return code;
 }
-
-int h1(unsigned long int k) { return k % SIZE; }
-
-int h2(unsigned long int k) { return 1 + (k % (SIZE - 2)); }
-
-int h_linear(unsigned long int k, int i) { return (h1(k) + i) % SIZE; }
-
-int h_quadratic(unsigned long int k, int i) { return (h1(k) + i * i) % SIZE; }
-
-int h_double(unsigned long int k, int i) { return (h1(k) + i * h2(k)) % SIZE; }
 
 HashTable *init(int size) {
   HashTable *T = calloc(1, sizeof(HashTable));
@@ -133,18 +123,10 @@ void printStats(HashTable *T) {
   printf("\n");
 }
 
-void insert(HashTable *T, int hashFunction(unsigned long int, int), char *key) {
-  int index;
-  for (int i = 0; i < T->length; i++) {
-    index = hashFunction(getStringCode(key), i);
-    if (T->keys[index]->state != OCCUPIED) {
-      T->keys[index]->content = key;
-      T->keys[index]->state = OCCUPIED;
-      T->keys[index]->n++;
-      return;
-    }
-    T->keys[index]->n++;
-  }
+void insert(HashTable *T, char *key) {
+  int index = getStringCode(key) % T->length;
+  T->keys[index]->state = OCCUPIED;
+  T->keys[index]->n++;
 }
 
 void test(HashTable *T, FILE *fp, int currentSize) {
@@ -156,7 +138,7 @@ void test(HashTable *T, FILE *fp, int currentSize) {
   for (int i = 0; i < SIZE * 2; i++) {
     string = calloc(20, sizeof(char));
     fscanf(fp, "%s\n", string);
-    insert(T, h_double, string);
+    insert(T, string);
   }
   rewind(fp);
 
@@ -171,8 +153,8 @@ int main() {
     return 1;
   }
 
-  int favorableSizes[] = {1021, 1259, 2521};
-  int unfavorableSizes[] = {1024, 1260, 2520};
+  int favorableSizes[] = {1021, 1931, 2521};
+  int unfavorableSizes[] = {1024, 1930, 2520};
   HashTable *T;
 
   // Testy dla rozmiarów sprzyjających
