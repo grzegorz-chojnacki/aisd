@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time.h>
 
+#pragma region declarations
 bool isPrintingAllowed = true;
 
 enum Color { red, black };
@@ -19,6 +20,54 @@ typedef struct Node {
 Node nilNode = {0, NULL, NULL, NULL, black};
 #define NIL (&nilNode)
 
+// Creating nodes
+Node *newRedBlackTree();
+Node *makeNode(Node *parent, int value);
+// Getters
+Node *get(Node *node, int value);
+Node *getBrother(Node *node);
+Node *getUncle(Node *node);
+Node *inorderSuccessor(Node *node);
+// Conditions
+bool isValid(Node *node);
+bool isTurning(Node *node);
+// Utils
+int minDepth(Node *node);
+int maxDepth(Node *node);
+int power(int a, int b);
+int redNodesCount(Node *node);
+int *getRandomSequence(int n);
+// Transformations
+void rotateLeft(Node *node);
+void rotateRight(Node *node);
+// Inserting
+void fixCase1(Node *node);
+void fixCase2(Node *node);
+void fixCase3(Node *node);
+void fixInsertion(Node *node);
+void insertNode(Node **root, int value);
+// Deleting
+void deleteCase0(Node *node);
+void deleteCase1(Node *node);
+void deleteCase2(Node *node);
+void deleteCase3(Node *node);
+void deleteCase4(Node *node);
+void fixDeletion(Node *node);
+void destroyNode(Node *node);
+void deleteNode(Node **root, int value);
+// Printing
+void printNode(Node *node);
+void printCaseHeader(Node *node, int n);
+void printNodesAtLevel(Node *node, int treeDepth, int level, int currentLevel);
+void printLinesAtLevel(Node *node, int treeDepth, int level, int currentLevel);
+void printLevel(Node *node, int treeDepth, int level);
+void print(Node *node);
+// Tests
+void testInsertion(Node **tree);
+void testInsertionHiddenOutput(Node **tree);
+void testDeletion(Node **tree);
+#pragma endregion declarations
+#pragma region creatingNodes
 Node *newRedBlackTree() {
   Node *rootNode = (Node *)calloc(1, sizeof(Node));
   rootNode->value = -1;
@@ -45,17 +94,8 @@ Node *makeNode(Node *parent, int value) {
 
   return newNode;
 }
-
-bool isValid(Node *node) {
-  if (node == NIL || node->parent == NIL) return true;
-  // *node jest poprawnie przyłączonym dzieckiem
-  // (Tylko po jednej stronie rodzica i przyłączonym dobrze w obie strony)
-  if ((node->parent->left == node) != (node->parent->right == node))
-    return true && isValid(node->left) && isValid(node->right);
-  else
-    return false;
-}
-
+#pragma endregion creatingNodes
+#pragma region getters
 Node *get(Node *node, int value) {
   if (node == NIL) return NIL;
   if (node->value == value) return node;
@@ -73,6 +113,84 @@ Node *getBrother(Node *node) {
 
 Node *getUncle(Node *node) { return getBrother(node->parent); }
 
+// Użyte tylko w przypadku drzewa z którego usuwamy węzeł z dwoma synami
+Node *inorderSuccessor(Node *node) {
+  for (node = node->right; node->left != NIL; node = node->left) {
+  }
+  return node;
+}
+#pragma endregion getters
+#pragma region conditions
+bool isValid(Node *node) {
+  if (node == NIL || node->parent == NIL) return true;
+  // *node jest poprawnie przyłączonym dzieckiem
+  // (Tylko po jednej stronie rodzica i przyłączonym dobrze w obie strony)
+  if ((node->parent->left == node) != (node->parent->right == node))
+    return true && isValid(node->left) && isValid(node->right);
+  else
+    return false;
+}
+
+// Czy węzeł jest dzieckiem z przeciwnej strony niż jego rodzic (przypadek #2)
+bool isTurning(Node *node) {
+  if (node->parent->parent->left == node->parent) {
+    if (node->parent->right == node)
+      return true;
+    else
+      return false;
+  } else {
+    if (node->parent->left == node)
+      return true;
+    else
+      return false;
+  }
+}
+#pragma endregion conditions
+#pragma region utils
+int minDepth(Node *node) {
+  if (node == NIL) return 0;
+  int leftDepth = minDepth(node->left) + 1;
+  int rightDepth = minDepth(node->right) + 1;
+  return (leftDepth < rightDepth ? leftDepth : rightDepth);
+}
+
+int maxDepth(Node *node) {
+  if (node == NIL) return 0;
+  int leftDepth = maxDepth(node->left) + 1;
+  int rightDepth = maxDepth(node->right) + 1;
+  return (leftDepth > rightDepth ? leftDepth : rightDepth);
+}
+
+int power(int a, int b) {
+  int result = 1;
+  while (b-- > 0) result *= a;
+  return result;
+}
+
+int redNodesCount(Node *node) {
+  if (node == NIL) return 0;
+  return ((node->color == red) ? 1 : 0) + redNodesCount(node->left) +
+         redNodesCount(node->right);
+}
+
+int *getRandomSequence(int n) {
+  srand(time(NULL));
+  int *array = (int *)calloc(n, sizeof(int));
+  // Generate sequence 1...n
+  for (int i = 0; i < n; i++) {
+    array[i] = i + 1;
+  }
+  // Shuffle sequence
+  for (int i = 0, j = 0; i < n; i++) {
+    j = rand() % (n - i) + i;
+    int tmp = array[i];
+    array[i] = array[j];
+    array[j] = tmp;
+  }
+  return array;
+}
+#pragma endregion utils
+#pragma region utils
 void rotateLeft(Node *node) {
   Node *nodeLeftSubTree = node->left;
   Node *nodeParent = node->parent;
@@ -121,33 +239,8 @@ void rotateRight(Node *node) {
   // Naprawa wskaźnika na lewe dziecko *node
   node->right = nodeParent;
 }
-
-// Czy węzeł jest dzieckiem z przeciwnej strony niż jego rodzic (przypadek #2)
-bool isTurning(Node *node) {
-  if (node->parent->parent->left == node->parent) {
-    if (node->parent->right == node)
-      return true;
-    else
-      return false;
-  } else {
-    if (node->parent->left == node)
-      return true;
-    else
-      return false;
-  }
-}
-
-void print(Node *node);
-void printNode(Node *node);
-void fixInsertion(Node *node);
-
-void printCaseHeader(Node *node, int n) {
-  if (!isPrintingAllowed) return;
-  printf("[Przypadek #%d ", n);
-  printNode(node);
-  printf("]:\n");
-}
-
+#pragma endregion utils
+#pragma region inserting
 void fixCase1(Node *node) {
   printCaseHeader(node, 1);
   node->parent->color = black;
@@ -233,16 +326,8 @@ void insertNode(Node **root, int value) {
   (*root)->color = black;
   return;
 }
-
-// Użyte tylko w przypadku drzewa z którego usuwamy węzeł z dwoma synami
-Node *inorderSuccessor(Node *node) {
-  for (node = node->right; node->left != NIL; node = node->left) {
-  }
-  return node;
-}
-
-void fixDeletion(Node *node);
-
+#pragma endregion inserting
+#pragma region deletion
 void deleteCase0(Node *node) {
   node->color = black;
   fixDeletion(node);
@@ -264,19 +349,6 @@ void deleteCase2(Node *node) {
   fixDeletion(node->parent);
 }
 
-void deleteCase4(Node *node) {
-  Node *brother = getBrother(node);
-  if (node->parent->left == node) {
-    rotateLeft(brother);
-    node->parent->parent->right->color = black;
-  } else {
-    rotateRight(brother);
-    node->parent->parent->left->color = black;
-  }
-  node->parent->parent->color = node->parent->color;
-  node->parent->color = black;
-}
-
 void deleteCase3(Node *node) {
   if (node->parent->left == node) {
     Node *nephew = getBrother(node)->left;
@@ -290,6 +362,19 @@ void deleteCase3(Node *node) {
     nephew->color = black;
   }
   deleteCase4(node);
+}
+
+void deleteCase4(Node *node) {
+  Node *brother = getBrother(node);
+  if (node->parent->left == node) {
+    rotateLeft(brother);
+    node->parent->parent->right->color = black;
+  } else {
+    rotateRight(brother);
+    node->parent->parent->left->color = black;
+  }
+  node->parent->parent->color = node->parent->color;
+  node->parent->color = black;
 }
 
 void fixDeletion(Node *node) {
@@ -353,25 +438,13 @@ void deleteNode(Node **root, int value) {
   (*root)->color = black;
   return;
 }
-
-int minDepth(Node *node) {
-  if (node == NIL) return 0;
-  int leftDepth = minDepth(node->left) + 1;
-  int rightDepth = minDepth(node->right) + 1;
-  return (leftDepth < rightDepth ? leftDepth : rightDepth);
-}
-
-int maxDepth(Node *node) {
-  if (node == NIL) return 0;
-  int leftDepth = maxDepth(node->left) + 1;
-  int rightDepth = maxDepth(node->right) + 1;
-  return (leftDepth > rightDepth ? leftDepth : rightDepth);
-}
-
-int redNodesCount(Node *node) {
-  if (node == NIL) return 0;
-  return ((node->color == red) ? 1 : 0) + redNodesCount(node->left) +
-         redNodesCount(node->right);
+#pragma endregion deletion
+#pragma region printing
+void printCaseHeader(Node *node, int n) {
+  if (!isPrintingAllowed) return;
+  printf("[Przypadek #%d ", n);
+  printNode(node);
+  printf("]:\n");
 }
 
 void printNode(Node *node) {
@@ -383,12 +456,6 @@ void printNode(Node *node) {
     printf("(%03d)", node->value);
   else
     printf("[%03d]", node->value);
-}
-
-int power(int a, int b) {
-  int result = 1;
-  while (b-- > 0) result *= a;
-  return result;
 }
 
 void printNodesAtLevel(Node *node, int treeDepth, int level, int currentLevel) {
@@ -482,24 +549,8 @@ void print(Node *node) {
   }
   printf("\n");
 }
-
-int *getRandomSequence(int n) {
-  srand(time(NULL));
-  int *array = (int *)calloc(n, sizeof(int));
-  // Generate sequence 1...n
-  for (int i = 0; i < n; i++) {
-    array[i] = i + 1;
-  }
-  // Shuffle sequence
-  for (int i = 0, j = 0; i < n; i++) {
-    j = rand() % (n - i) + i;
-    int tmp = array[i];
-    array[i] = array[j];
-    array[j] = tmp;
-  }
-  return array;
-}
-
+#pragma endregion printing
+#pragma region tests
 void testInsertion(Node **tree) {
   printf("(xxx) - Węzeł czerwony, [xxx] - Węzeł czarny\n");
   print(*tree);
@@ -559,6 +610,7 @@ void testDeletion(Node **tree) {
   printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
   getchar();
 }
+#pragma endregion tests
 
 int main() {
   nilNode.parent = NIL;
@@ -568,7 +620,7 @@ int main() {
 
   // testInsertion(&tree); // Wstawianie krok po kroku
   testInsertionHiddenOutput(&tree);
-  testDeletion(&tree);
+  // testDeletion(&tree);
   return 0;
 }
 
