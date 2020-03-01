@@ -44,21 +44,21 @@ Node *makeNode(Node *parent, int value) {
   return newNode;
 }
 
-// bool isValid(Node *node) {
-//   if (node == NIL || node->parent == NIL) return true;
-//   // *node jest poprawnie przyłączonym dzieckiem
-//   // (Tylko po jednej stronie rodzica i przyłączonym dobrze w obie strony)
-//   if ((node->parent->left == node) != (node->parent->right == node))
-//     return true && isValid(node->left) && isValid(node->right);
-//   else
-//    return false;
-// }
+bool isValid(Node *node) {
+  if (node == NIL || node->parent == NIL) return true;
+  // *node jest poprawnie przyłączonym dzieckiem
+  // (Tylko po jednej stronie rodzica i przyłączonym dobrze w obie strony)
+  if ((node->parent->left == node) != (node->parent->right == node))
+    return true && isValid(node->left) && isValid(node->right);
+  else
+    return false;
+}
 
-Node *search(Node *node, int value) {
+Node *get(Node *node, int value) {
   if (node == NIL) return NIL;
   if (node->value == value) return node;
   node = (value <= node->value) ? node->left : node->right;
-  return search(node, value);
+  return get(node, value);
 }
 
 // NIL returns NIL
@@ -71,7 +71,6 @@ Node *getBrother(Node *node) {
 
 Node *getUncle(Node *node) { return getBrother(node->parent); }
 
-// Obrót względem rodzica Node *node
 void rotateLeft(Node *node) {
   Node *nodeLeftSubTree = node->left;
   Node *nodeParent = node->parent;
@@ -121,14 +120,15 @@ void rotateRight(Node *node) {
   node->right = nodeParent;
 }
 
-bool isInStraightDirection(Node *node) {
+// Czy węzeł jest dzieckiem z przeciwnej strony niż jego rodzic (przypadek #2)
+bool isTurning(Node *node) {
   if (node->parent->parent->left == node->parent) {
-    if (node->parent->left == node)
+    if (node->parent->right == node)
       return true;
     else
       return false;
   } else {
-    if (node->parent->right == node)
+    if (node->parent->left == node)
       return true;
     else
       return false;
@@ -138,17 +138,21 @@ bool isInStraightDirection(Node *node) {
 void print(Node *node);
 void printNode(Node *node);
 
+void fixCase1(Node *node) {
+
+}
+
 void fixTree(Node *node) {
   // Korzeń:
   if (node->parent == NIL) return;
   if (node->parent->color == black) return;
 
-  {  // Narysuj kolejny krok
-    Node *tmp = node;
-    while (tmp->parent != NIL) tmp = tmp->parent;
-    print(tmp);
-  }
+  // Narysuj krok pośredni
+  Node *tmp = node;
+  while (tmp->parent != NIL) tmp = tmp->parent;
+  print(tmp);
 
+  // Naprawianie
   if (getUncle(node)->color == red) {
     // Przypadek #1:
     printf("[Przypadek #1 ");
@@ -158,19 +162,19 @@ void fixTree(Node *node) {
     getUncle(node)->color = black;
     Node *grandfather = node->parent->parent;
     grandfather->color = red;
-    return fixTree(grandfather);
+    fixTree(grandfather);
   } else {
-    if (!isInStraightDirection(node)) {
+    if (isTurning(node)) {
       // Przypadek #2:
       printf("[Przypadek #2 ");
       printNode(node);
       printf("]:\n");
       if (node->parent->right == node) {
         rotateLeft(node);
-        return fixTree(node->left);
+        fixTree(node->left);
       } else {
         rotateRight(node);
-        return fixTree(node->right);
+        fixTree(node->right);
       }
     } else {
       // Przypadek #3:
@@ -184,7 +188,7 @@ void fixTree(Node *node) {
       }
       getBrother(node)->color = red;
       node->parent->color = black;
-      return fixTree(node);
+      fixTree(node);
     }
   }
 }
@@ -378,8 +382,9 @@ int main() {
     tree = insert(&tree, numbers[i]);
     print(tree);
     printf("Wstawiono: ");
-    printNode(search(tree, numbers[i]));
+    printNode(get(tree, numbers[i]));
     printf(" ###\n");
   }
+  printf("isValid: %d\n", isValid(tree));
   return 0;
 }
