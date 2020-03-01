@@ -139,7 +139,7 @@ bool isTurning(Node *node) {
 
 void print(Node *node);
 void printNode(Node *node);
-void fixTree(Node *node);
+void fixInsertion(Node *node);
 
 void printCaseHeader(Node *node, int n) {
   if (!isPrintingAllowed) return;
@@ -154,17 +154,17 @@ void fixCase1(Node *node) {
   getUncle(node)->color = black;
   Node *grandfather = node->parent->parent;
   grandfather->color = red;
-  fixTree(grandfather);
+  fixInsertion(grandfather);
 }
 
 void fixCase2(Node *node) {
   printCaseHeader(node, 2);
   if (node->parent->right == node) {
     rotateLeft(node);
-    fixTree(node->left);
+    fixInsertion(node->left);
   } else {
     rotateRight(node);
-    fixTree(node->right);
+    fixInsertion(node->right);
   }
 }
 
@@ -176,10 +176,10 @@ void fixCase3(Node *node) {
     rotateLeft(node->parent);
   getBrother(node)->color = red;
   node->parent->color = black;
-  fixTree(node);
+  fixInsertion(node);
 }
 
-void fixTree(Node *node) {
+void fixInsertion(Node *node) {
   // Korzeń:
   if (node->parent == NIL) return;
   if (node->parent->color == black) return;
@@ -201,7 +201,7 @@ void fixTree(Node *node) {
   }
 }
 
-void insert(Node **root, int value) {
+void insertNode(Node **root, int value) {
   if (value < 0) {
     printf("Niepoprawna wartość\n");
     exit(1);
@@ -225,7 +225,7 @@ void insert(Node **root, int value) {
   // node wskazuje na miejsce (NIL),
   // gdzie powinna zostać umieszczona nowa wartość
   node = makeNode(parent, value);
-  fixTree(node);
+  fixInsertion(node);
 
   // Korzeń może zostać zmieniony
   while ((*root)->parent != NIL) (*root) = (*root)->parent;
@@ -234,7 +234,125 @@ void insert(Node **root, int value) {
   return;
 }
 
-void delete (Node **root, int value) {}
+// Użyte tylko w przypadku drzewa z którego usuwamy węzeł z dwoma synami
+Node *inorderSuccessor(Node *node) {
+  for (node = node->right; node->left != NIL; node = node->left) {
+  }
+  return node;
+}
+
+void fixDeletion(Node *node);
+
+void deleteCase0(Node *node) {
+  node->color = black;
+  fixDeletion(node);
+}
+
+void deleteCase1(Node *node) {
+  if (node->parent->left == node) {
+    rotateLeft(getBrother(node));
+  } else {
+    rotateRight(getBrother(node));
+  }
+  node->parent->color = red;
+  node->parent->parent->color = black;
+  fixDeletion(node);
+}
+
+void deleteCase2(Node *node) {
+  getBrother(node)->color = red;
+  fixDeletion(node->parent);
+}
+
+void deleteCase4(Node *node) {
+  Node *brother = getBrother(node);
+  if (node->parent->left == node) {
+    rotateLeft(brother);
+    node->parent->parent->right->color = black;
+  } else {
+    rotateRight(brother);
+    node->parent->parent->left->color = black;
+  }
+  node->parent->parent->color = node->parent->color;
+  node->parent->color = black;
+}
+
+void deleteCase3(Node *node) {
+  if (node->parent->left == node) {
+    Node *nephew = getBrother(node)->left;
+    rotateRight(nephew);
+    nephew->right->color = red;
+    nephew->color = black;
+  } else {
+    Node *nephew = getBrother(node)->right;
+    rotateRight(nephew);
+    nephew->left->color = red;
+    nephew->color = black;
+  }
+  deleteCase4(node);
+}
+
+void fixDeletion(Node *node) {
+  if (node->color == red) return deleteCase0(node);
+
+  Node *brother = getBrother(node);
+  if (brother->color == red) return deleteCase1(brother);
+
+  if (brother->left->color == black && brother->right->color == black)
+    return deleteCase2(node);
+
+  if (node->parent->left == node) {
+    if (brother->left->color == red && brother->right->color == black)
+      return deleteCase3(node);
+    else
+      return deleteCase4(node);
+  } else {
+    if (brother->right->color == red && brother->left->color == black)
+      return deleteCase3(node);
+    else
+      return deleteCase4(node);
+  }
+}
+
+// Free memory
+void destroyNode(Node *node) {
+  if (node->parent->left == node)
+    node->parent->left = NIL;
+  else
+    node->parent->right = NIL;
+  free(node);
+}
+
+void deleteNode(Node **root, int value) {
+  Node *node = get(*root, value);
+  // Leaf case
+  if (node->left == NIL && NIL == node->right) destroyNode(node);
+  // Two child case
+  if (node->left != NIL && NIL != node->right) {
+    Node *successor = inorderSuccessor(node);
+    node->value = successor->value;
+    node->parent = successor->parent;
+    node->left = successor->left;
+    node->right = successor->right;
+    node->color = successor->color;
+    destroyNode(successor);
+  }
+  // One child case
+  if (node->left != NIL) {
+    node->value = node->left->value;
+    destroyNode(node->left);
+  } else {
+    node->value = node->right->value;
+    destroyNode(node->right);
+  }
+  // TODO: node ma być węzłem od którego zaczyna brakować czarnych
+  fixDeletion(node);
+  // Korzeń może zostać zmieniony
+  while ((*root)->parent != NIL) (*root) = (*root)->parent;
+
+  (*root)->color = black;
+  return;
+}
 
 int minDepth(Node *node) {
   if (node == NIL) return 0;
@@ -392,7 +510,7 @@ void testInsertion(Node **tree) {
   for (int i = 0; i < numbersLenght; i++) {
     printf("Wstaw %03d [Enter]: ", numbers[i]);
     getchar();
-    insert(tree, numbers[i]);
+    insertNode(tree, numbers[i]);
     print(*tree);
     printf("Wstawiono: ");
     printNode(get(*tree, numbers[i]));
@@ -400,6 +518,8 @@ void testInsertion(Node **tree) {
   }
 
   printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
+  printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
+  printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
   printf("Zakończono wstawianie: ");
   getchar();
 }
@@ -410,12 +530,14 @@ void testInsertionHiddenOutput(Node **tree) {
   int numbers[] = {38, 31, 22, 8, 20, 5, 10, 9, 21, 27, 29, 25, 28};
   int numbersLenght = sizeof(numbers) / sizeof(numbers[0]);
   for (int i = 0; i < numbersLenght; i++) {
-    insert(tree, numbers[i]);
+    insertNode(tree, numbers[i]);
   }
   isPrintingAllowed = true;
   printf("(xxx) - Węzeł czerwony, [xxx] - Węzeł czarny\n");
   print(*tree);
   printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
+  printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
+  printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
 }
 
 void testDeletion(Node **tree) {
@@ -425,13 +547,16 @@ void testDeletion(Node **tree) {
   for (int i = 0; i < numbersLenght; i++) {
     printf("Usuń ");
     printNode(get(*tree, numbers[i]));
-    printf("[Enter]: ");
+    printf(" [Enter]: ");
     getchar();
-    delete (tree, numbers[i]);
+    deleteNode(tree, numbers[i]);
     print(*tree);
     printf("Usunięto: %03d ###\n", numbers[i]);
   }
   printf("Zakończono usuwanie: ");
+  printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
+  printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
+  printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
   getchar();
 }
 
@@ -441,8 +566,13 @@ int main() {
   nilNode.right = NIL;
   Node *tree = newRedBlackTree();
 
-  // testInsertion(&tree);
+  // testInsertion(&tree); // Wstawianie krok po kroku
   testInsertionHiddenOutput(&tree);
   testDeletion(&tree);
   return 0;
 }
+
+// Ostatnia zmiana: fixDeletion
+//
+// Zrobić algorytm który wyszuka pierwszy węzeł od którego zaczyna brakować
+// czarnych.
