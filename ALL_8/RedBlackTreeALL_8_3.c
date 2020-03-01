@@ -136,13 +136,14 @@ bool isInStraightDirection(Node *node) {
 }
 
 void print(Node *node);
+void printNode(Node *node);
 
 void fixTree(Node *node) {
   // Korzeń:
   if (node->parent == NIL) return;
   if (node->parent->color == black) return;
 
-  { // Narysuj kolejny krok
+  {  // Narysuj kolejny krok
     Node *tmp = node;
     while (tmp->parent != NIL) tmp = tmp->parent;
     print(tmp);
@@ -150,7 +151,9 @@ void fixTree(Node *node) {
 
   if (getUncle(node)->color == red) {
     // Przypadek #1:
-    printf("Przypadek #1\n");
+    printf("[Przypadek #1 ");
+    printNode(node);
+    printf("]:\n");
     node->parent->color = black;
     getUncle(node)->color = black;
     Node *grandfather = node->parent->parent;
@@ -159,7 +162,9 @@ void fixTree(Node *node) {
   } else {
     if (!isInStraightDirection(node)) {
       // Przypadek #2:
-      printf("Przypadek #2\n");
+      printf("[Przypadek #2 ");
+      printNode(node);
+      printf("]:\n");
       if (node->parent->right == node) {
         rotateLeft(node);
         return fixTree(node->left);
@@ -169,7 +174,9 @@ void fixTree(Node *node) {
       }
     } else {
       // Przypadek #3:
-      printf("Przypadek #3\n");
+      printf("[Przypadek #3 ");
+      printNode(node);
+      printf("]:\n");
       if (node->parent->left == node) {
         rotateRight(node->parent);
       } else {
@@ -271,26 +278,32 @@ void printLinesAtLevel(Node *node, int treeDepth, int level, int currentLevel) {
     int spaces = 3 * power(2, treeDepth - level) - 3;
     spaces = (spaces + 1) / 2;
     for (int i = 0; i < spaces; i++) printf(" ");
+
     // Rysowanie linii (pierwszy segment)
     int lineLength = spaces;
     if (node->left != NIL) {
-      printf("+");
-      for (int i = 0; i < lineLength; i++) printf("-");
+      printf("┌");
+      for (int i = 0; i < lineLength; i++) printf("─");
     } else {
       printf(" ");
       for (int i = 0; i < lineLength; i++) printf(" ");
     }
 
     // Rysowanie linii (łączenie)
-    if (node->left == NIL && node->right == NIL)
-      printf(" ");
+    if (node->left == NIL)
+      if (node->right == NIL)
+        printf(" ");
+      else
+        printf("└");
+    else if (node->right == NIL)
+      printf("┘");
     else
-      printf("+");
+      printf("┴");
 
     // Rysowanie linii (drugi segment)
     if (node->right != NIL) {
-      for (int i = 0; i < lineLength; i++) printf("-");
-      printf("+");
+      for (int i = 0; i < lineLength; i++) printf("─");
+      printf("┐");
     } else {
       for (int i = 0; i < lineLength; i++) printf(" ");
       printf(" ");
@@ -307,8 +320,11 @@ void printLinesAtLevel(Node *node, int treeDepth, int level, int currentLevel) {
 void printLevel(Node *node, int treeDepth, int level) {
   printNodesAtLevel(node, treeDepth, level, 1);
   printf("\n");
-  printLinesAtLevel(node, treeDepth, level, 1);
-  printf("\n");
+  // Rysuj linie tylko do przedostatniej (zawsze pusta)
+  if (level < treeDepth) {
+    printLinesAtLevel(node, treeDepth, level, 1);
+    printf("\n");
+  }
 }
 
 void print(Node *node) {
@@ -353,15 +369,17 @@ int main() {
   nilNode.right = NIL;
   int numbersLenght = sizeof(numbers) / sizeof(numbers[0]);
   Node *tree = newRedBlackTree();
-  printf("(xxx) - Węzeł czerwony, [xxx] - Węzel czarny\n");
+  printf("(xxx) - Węzeł czerwony, [xxx] - Węzeł czarny\n");
   print(tree);
 
   for (int i = 0; i < numbersLenght; i++) {
-    printf("> Wstaw %03d [Enter]", numbers[i]);
+    printf("Wstaw (%03d) [Enter]: ", numbers[i]);
     getchar();
     tree = insert(&tree, numbers[i]);
     print(tree);
-    printf("\n[Wstawiono: %03d]\n", numbers[i]);
+    printf("Wstawiono: ");
+    printNode(search(tree, numbers[i]));
+    printf(" ###\n");
   }
   return 0;
 }
