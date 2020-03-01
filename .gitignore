@@ -1,6 +1,7 @@
 # Junk Files
 *.zip
 *.pdf
+pmp.c
 
 # Test data
 *.txt
