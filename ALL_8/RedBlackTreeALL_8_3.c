@@ -137,9 +137,43 @@ bool isTurning(Node *node) {
 
 void print(Node *node);
 void printNode(Node *node);
+void fixTree(Node *node);
+
+void printCaseHeader(Node *node, int n) {
+  printf("[Przypadek #%d ", n);
+  printNode(node);
+  printf("]:\n");
+}
 
 void fixCase1(Node *node) {
+  printCaseHeader(node, 1);
+  node->parent->color = black;
+  getUncle(node)->color = black;
+  Node *grandfather = node->parent->parent;
+  grandfather->color = red;
+  fixTree(grandfather);
+}
 
+void fixCase2(Node *node) {
+  printCaseHeader(node, 2);
+  if (node->parent->right == node) {
+    rotateLeft(node);
+    fixTree(node->left);
+  } else {
+    rotateRight(node);
+    fixTree(node->right);
+  }
+}
+
+void fixCase3(Node *node) {
+  printCaseHeader(node, 3);
+  if (node->parent->left == node)
+    rotateRight(node->parent);
+  else
+    rotateLeft(node->parent);
+  getBrother(node)->color = red;
+  node->parent->color = black;
+  fixTree(node);
 }
 
 void fixTree(Node *node) {
@@ -154,41 +188,12 @@ void fixTree(Node *node) {
 
   // Naprawianie
   if (getUncle(node)->color == red) {
-    // Przypadek #1:
-    printf("[Przypadek #1 ");
-    printNode(node);
-    printf("]:\n");
-    node->parent->color = black;
-    getUncle(node)->color = black;
-    Node *grandfather = node->parent->parent;
-    grandfather->color = red;
-    fixTree(grandfather);
+    fixCase1(node);
   } else {
     if (isTurning(node)) {
-      // Przypadek #2:
-      printf("[Przypadek #2 ");
-      printNode(node);
-      printf("]:\n");
-      if (node->parent->right == node) {
-        rotateLeft(node);
-        fixTree(node->left);
-      } else {
-        rotateRight(node);
-        fixTree(node->right);
-      }
+      fixCase2(node);
     } else {
-      // Przypadek #3:
-      printf("[Przypadek #3 ");
-      printNode(node);
-      printf("]:\n");
-      if (node->parent->left == node) {
-        rotateRight(node->parent);
-      } else {
-        rotateLeft(node->parent);
-      }
-      getBrother(node)->color = red;
-      node->parent->color = black;
-      fixTree(node);
+      fixCase3(node);
     }
   }
 }
@@ -196,8 +201,9 @@ void fixTree(Node *node) {
 Node *insert(Node **root, int value) {
   if (value < 0) {
     printf("Niepoprawna wartość\n");
-    return *root;
+    exit(1);
   }
+
   // Jeżeli korzeń jest pusty
   if ((*root)->value == -1) {
     (*root)->value = value;
@@ -216,15 +222,17 @@ Node *insert(Node **root, int value) {
   // node wskazuje na miejsce (NIL),
   // gdzie powinna zostać umieszczona nowa wartość
   node = makeNode(parent, value);
-
   fixTree(node);
+
   // Korzeń może zostać zmieniony
-  while ((*root)->parent != NIL) (*root) = (*root)->parent;
+  while ((*root)->parent != NIL)
+    (*root) = (*root)->parent;
+
   (*root)->color = black;
   return *root;
 }
 
-void delete (Node *node, int value) {}
+void delete(Node *node, int value) {}
 
 int minDepth(Node *node) {
   if (node == NIL) return 0;
@@ -239,7 +247,12 @@ int maxDepth(Node *node) {
   int rightDepth = maxDepth(node->right) + 1;
   return (leftDepth > rightDepth ? leftDepth : rightDepth);
 }
-int redNodesCount(Node *node) {}
+
+int redNodesCount(Node *node) {
+  if (node == NIL) return 0;
+  return ((node->color == red) ? 1 : 0)
+    + redNodesCount(node->left) + redNodesCount(node->right);
+}
 
 void printNode(Node *node) {
   if (node == NIL) {
@@ -386,5 +399,6 @@ int main() {
     printf(" ###\n");
   }
   printf("isValid: %d\n", isValid(tree));
+  printf("Ilość czerwonych węzłów: %d\n", redNodesCount(tree));
   return 0;
 }
