@@ -4,6 +4,8 @@
 #include <string.h>
 #include <time.h>
 
+bool isPrintingAllowed = true;
+
 enum Color { red, black };
 
 typedef struct Node {
@@ -140,6 +142,7 @@ void printNode(Node *node);
 void fixTree(Node *node);
 
 void printCaseHeader(Node *node, int n) {
+  if (!isPrintingAllowed) return;
   printf("[Przypadek #%d ", n);
   printNode(node);
   printf("]:\n");
@@ -198,7 +201,7 @@ void fixTree(Node *node) {
   }
 }
 
-Node *insert(Node **root, int value) {
+void insert(Node **root, int value) {
   if (value < 0) {
     printf("Niepoprawna wartość\n");
     exit(1);
@@ -207,7 +210,7 @@ Node *insert(Node **root, int value) {
   // Jeżeli korzeń jest pusty
   if ((*root)->value == -1) {
     (*root)->value = value;
-    return *root;
+    return;
   }
 
   // Informacja o rodzicu jest tracona przy wejściu w NIL
@@ -225,14 +228,13 @@ Node *insert(Node **root, int value) {
   fixTree(node);
 
   // Korzeń może zostać zmieniony
-  while ((*root)->parent != NIL)
-    (*root) = (*root)->parent;
+  while ((*root)->parent != NIL) (*root) = (*root)->parent;
 
   (*root)->color = black;
-  return *root;
+  return;
 }
 
-void delete(Node *node, int value) {}
+void delete (Node **root, int value) {}
 
 int minDepth(Node *node) {
   if (node == NIL) return 0;
@@ -250,8 +252,8 @@ int maxDepth(Node *node) {
 
 int redNodesCount(Node *node) {
   if (node == NIL) return 0;
-  return ((node->color == red) ? 1 : 0)
-    + redNodesCount(node->left) + redNodesCount(node->right);
+  return ((node->color == red) ? 1 : 0) + redNodesCount(node->left) +
+         redNodesCount(node->right);
 }
 
 void printNode(Node *node) {
@@ -345,6 +347,7 @@ void printLevel(Node *node, int treeDepth, int level) {
 }
 
 void print(Node *node) {
+  if (!isPrintingAllowed) return;
   if (node->value == -1) {
     printf("\n(Drzewo puste)\n\n");
     return;
@@ -379,26 +382,67 @@ int *getRandomSequence(int n) {
   return array;
 }
 
-int main() {
+void testInsertion(Node **tree) {
+  printf("(xxx) - Węzeł czerwony, [xxx] - Węzeł czarny\n");
+  print(*tree);
+
+  // Wstawianie elementów
   int numbers[] = {38, 31, 22, 8, 20, 5, 10, 9, 21, 27, 29, 25, 28};
+  int numbersLenght = sizeof(numbers) / sizeof(numbers[0]);
+  for (int i = 0; i < numbersLenght; i++) {
+    printf("Wstaw %03d [Enter]: ", numbers[i]);
+    getchar();
+    insert(tree, numbers[i]);
+    print(*tree);
+    printf("Wstawiono: ");
+    printNode(get(*tree, numbers[i]));
+    printf(" ###\n");
+  }
+
+  printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
+  printf("Zakończono wstawianie: ");
+  getchar();
+}
+
+void testInsertionHiddenOutput(Node **tree) {
+  isPrintingAllowed = false;
+  // Wstawianie elementów
+  int numbers[] = {38, 31, 22, 8, 20, 5, 10, 9, 21, 27, 29, 25, 28};
+  int numbersLenght = sizeof(numbers) / sizeof(numbers[0]);
+  for (int i = 0; i < numbersLenght; i++) {
+    insert(tree, numbers[i]);
+  }
+  isPrintingAllowed = true;
+  printf("(xxx) - Węzeł czerwony, [xxx] - Węzeł czarny\n");
+  print(*tree);
+  printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
+}
+
+void testDeletion(Node **tree) {
+  // Usuwanie elementów
+  int numbers[] = {5, 38, 8, 10, 22, 20, 29, 31};
+  int numbersLenght = sizeof(numbers) / sizeof(numbers[0]);
+  for (int i = 0; i < numbersLenght; i++) {
+    printf("Usuń ");
+    printNode(get(*tree, numbers[i]));
+    printf("[Enter]: ");
+    getchar();
+    delete (tree, numbers[i]);
+    print(*tree);
+    printf("Usunięto: %03d ###\n", numbers[i]);
+  }
+  printf("Zakończono usuwanie: ");
+  getchar();
+}
+
+int main() {
   nilNode.parent = NIL;
   nilNode.left = NIL;
   nilNode.right = NIL;
-  int numbersLenght = sizeof(numbers) / sizeof(numbers[0]);
   Node *tree = newRedBlackTree();
-  printf("(xxx) - Węzeł czerwony, [xxx] - Węzeł czarny\n");
-  print(tree);
 
-  for (int i = 0; i < numbersLenght; i++) {
-    printf("Wstaw (%03d) [Enter]: ", numbers[i]);
-    getchar();
-    tree = insert(&tree, numbers[i]);
-    print(tree);
-    printf("Wstawiono: ");
-    printNode(get(tree, numbers[i]));
-    printf(" ###\n");
-  }
-  printf("isValid: %d\n", isValid(tree));
-  printf("Ilość czerwonych węzłów: %d\n", redNodesCount(tree));
+  // testInsertion(&tree);
+  testInsertionHiddenOutput(&tree);
+  testDeletion(&tree);
   return 0;
 }
