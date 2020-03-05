@@ -4,77 +4,34 @@
 #include <string.h>
 #include <time.h>
 
-#pragma region declarations
 bool isPrintingAllowed = true;
 
-enum Color { red, black };
+typedef enum Color { red, black, empty } Color;
 
 typedef struct Node {
   int value;
   struct Node *parent;
   struct Node *left;
   struct Node *right;
-  enum Color color;
+  Color color;
 } Node;
 
 Node nilNode = {0, NULL, NULL, NULL, black};
 #define NIL (&nilNode)
 
-// Creating nodes
-Node *newRedBlackTree();
-Node *makeNode(Node *parent, int value);
-// Getters
-Node *get(Node *node, int value);
-Node *getBrother(Node *node);
-Node *getUncle(Node *node);
-Node *inorderSuccessor(Node *node);
-// Conditions
-bool isValid(Node *node);
-bool isTurning(Node *node);
-// Utils
-int minDepth(Node *node);
-int maxDepth(Node *node);
-int power(int a, int b);
-int redNodesCount(Node *node);
-int *getRandomSequence(int n);
-// Transformations
-void rotateLeft(Node *node);
-void rotateRight(Node *node);
-// Inserting
-void fixCase1(Node *node);
-void fixCase2(Node *node);
-void fixCase3(Node *node);
-void fixInsertion(Node *node);
-void insertNode(Node **root, int value);
-// Deleting
-void deleteCase0(Node *node);
-void deleteCase1(Node *node);
-void deleteCase2(Node *node);
-void deleteCase3(Node *node);
-void deleteCase4(Node *node);
-void fixDeletion(Node *node);
-void destroyNode(Node *node);
-void deleteNode(Node **root, int value);
-// Printing
-void printNode(Node *node);
 void printCaseHeader(Node *node, int n);
-void printNodesAtLevel(Node *node, int treeDepth, int level, int currentLevel);
-void printLinesAtLevel(Node *node, int treeDepth, int level, int currentLevel);
-void printLevel(Node *node, int treeDepth, int level);
+void fixInsertion(Node *node);
+void fixDeletion(Node *node);
 void print(Node *node);
-// Tests
-void testInsertion(Node **tree);
-void testInsertionHiddenOutput(Node **tree);
-void testDeletion(Node **tree);
-#pragma endregion declarations
-#pragma region creatingNodes
+void printNode(Node *node);
+
 Node *newRedBlackTree() {
   Node *rootNode = (Node *)calloc(1, sizeof(Node));
-  rootNode->value = -1;
+  rootNode->value = 0;
   rootNode->parent = NIL;
   rootNode->left = NIL;
   rootNode->right = NIL;
-  rootNode->color = black;
+  rootNode->color = empty;
 
   return rootNode;
 }
@@ -94,8 +51,7 @@ Node *makeNode(Node *parent, int value) {
 
   return newNode;
 }
-#pragma endregion creatingNodes
-#pragma region getters
+
 Node *get(Node *node, int value) {
   if (node == NIL) return NIL;
   if (node->value == value) return node;
@@ -113,14 +69,55 @@ Node *getBrother(Node *node) {
 
 Node *getUncle(Node *node) { return getBrother(node->parent); }
 
+bool areParallel(Node *nodeA, Node *nodeB) {
+  if (nodeA->parent->left == nodeA) {
+    if (nodeB->parent->left == nodeB)
+      return true;
+    else
+      return false;
+  } else if (nodeB->parent->right == nodeB)
+    return true;
+  else
+    return false;
+}
+
+Node *getBrotherRedParallelSon(Node *node) {
+  Node *brother = getBrother(node);
+  if (brother->left->color == red && areParallel(node, brother->left))
+    return brother->left;
+  if (brother->right->color == red && areParallel(node, brother->right))
+    return brother->right;
+  else
+    printNode(node);
+  return NIL;
+}
+
+Node *getBrotherRedTurningSon(Node *node) {
+  Node *brother = getBrother(node);
+  if (brother->left->color == red && !areParallel(node, brother->left))
+    return brother->left;
+  if (brother->right->color == red && !areParallel(node, brother->right))
+    return brother->right;
+  else
+    printNode(node);
+  return NIL;
+}
+
+bool hasSonOfColor(Node *node, Color color) {
+  if (node->left->color == color) return true;
+  if (node->right->color == color)
+    return true;
+  else
+    return false;
+}
+
 // Użyte tylko w przypadku drzewa z którego usuwamy węzeł z dwoma synami
 Node *inorderSuccessor(Node *node) {
   for (node = node->right; node->left != NIL; node = node->left) {
   }
   return node;
 }
-#pragma endregion getters
-#pragma region conditions
+
 bool isValid(Node *node) {
   if (node == NIL || node->parent == NIL) return true;
   // *node jest poprawnie przyłączonym dzieckiem
@@ -145,8 +142,7 @@ bool isTurning(Node *node) {
       return false;
   }
 }
-#pragma endregion conditions
-#pragma region utils
+
 int minDepth(Node *node) {
   if (node == NIL) return 0;
   int leftDepth = minDepth(node->left) + 1;
@@ -189,8 +185,7 @@ int *getRandomSequence(int n) {
   }
   return array;
 }
-#pragma endregion utils
-#pragma region utils
+
 void rotateLeft(Node *node) {
   Node *nodeLeftSubTree = node->left;
   Node *nodeParent = node->parent;
@@ -200,11 +195,10 @@ void rotateLeft(Node *node) {
   node->parent = nodeGrandfather;
   if (node->parent != NIL) {
     // Podłączenie nowego ojca z *node
-    if (nodeGrandfather->left == nodeParent) {
+    if (nodeGrandfather->left == nodeParent)
       nodeGrandfather->left = node;
-    } else {
+    else
       nodeGrandfather->right = node;
-    }
   }
 
   // Naprawa starego ojca *node
@@ -224,11 +218,10 @@ void rotateRight(Node *node) {
   node->parent = nodeGrandfather;
   if (node->parent != NIL) {
     // Podłączenie nowego ojca z *node
-    if (nodeGrandfather->left == nodeParent) {
+    if (nodeGrandfather->left == nodeParent)
       nodeGrandfather->left = node;
-    } else {
+    else
       nodeGrandfather->right = node;
-    }
   }
 
   // Naprawa starego ojca *node
@@ -239,42 +232,43 @@ void rotateRight(Node *node) {
   // Naprawa wskaźnika na lewe dziecko *node
   node->right = nodeParent;
 }
-#pragma endregion utils
-#pragma region inserting
-void fixCase1(Node *node) {
+
+// Automatyczny obrót węzła tak, by stał się rodzicem swojego rodzica
+void rotate(Node *node) {
+  if (node->parent->left == node)
+    rotateRight(node);
+  else
+    rotateLeft(node);
+}
+
+// *nextNode - wskaźnik na węzeł, który jest kolejnym kandydatem na naprawę:
+void insertCase1(Node *node) {
   printCaseHeader(node, 1);
+  Node *nextNode = node->parent->parent;
+  nextNode->color = red;
   node->parent->color = black;
   getUncle(node)->color = black;
-  Node *grandfather = node->parent->parent;
-  grandfather->color = red;
-  fixInsertion(grandfather);
+  fixInsertion(nextNode);
 }
 
-void fixCase2(Node *node) {
-  printCaseHeader(node, 2);
-  if (node->parent->right == node) {
-    rotateLeft(node);
-    fixInsertion(node->left);
-  } else {
-    rotateRight(node);
-    fixInsertion(node->right);
-  }
-}
-
-void fixCase3(Node *node) {
+void insertCase3(Node *node) {
   printCaseHeader(node, 3);
-  if (node->parent->left == node)
-    rotateRight(node->parent);
-  else
-    rotateLeft(node->parent);
-  getBrother(node)->color = red;
   node->parent->color = black;
-  fixInsertion(node);
+  node->parent->parent->color = red;
+  rotate(node->parent);
+}
+
+void insertCase2(Node *node) {
+  printCaseHeader(node, 2);
+  Node *nextNode = node->parent;
+  rotate(node);
+  insertCase3(nextNode);
 }
 
 void fixInsertion(Node *node) {
-  // Korzeń:
+  // Napotkano korzeń:
   if (node->parent == NIL) return;
+  // Rodzic czarny
   if (node->parent->color == black) return;
 
   // Narysuj krok pośredni
@@ -283,35 +277,27 @@ void fixInsertion(Node *node) {
   print(tmp);
 
   // Naprawianie
-  if (getUncle(node)->color == red) {
-    fixCase1(node);
-  } else {
-    if (isTurning(node)) {
-      fixCase2(node);
-    } else {
-      fixCase3(node);
-    }
-  }
+  if (getUncle(node)->color == red)
+    insertCase1(node);
+  else if (isTurning(node))
+    insertCase2(node);
+  else
+    insertCase3(node);
 }
 
 void insertNode(Node **root, int value) {
-  if (value < 0) {
-    printf("Niepoprawna wartość\n");
-    exit(1);
-  }
-
   // Jeżeli korzeń jest pusty
-  if ((*root)->value == -1) {
+  if ((*root)->color == empty) {
     (*root)->value = value;
+    (*root)->color = black;
     return;
   }
-
   // Informacja o rodzicu jest tracona przy wejściu w NIL
   Node *parent;
   Node *node = (*root);
   do {
     parent = node;
-    // Przejście w lewe lub prawe dziecko
+    // Przeszukiwanie binarne
     node = (value <= node->value) ? node->left : node->right;
   } while (node != NIL);
 
@@ -320,82 +306,67 @@ void insertNode(Node **root, int value) {
   node = makeNode(parent, value);
   fixInsertion(node);
 
-  // Korzeń może zostać zmieniony
-  while ((*root)->parent != NIL) (*root) = (*root)->parent;
-
+  // Korzeń może zostać zmieniony (rotacja)
+  while ((*root)->parent != NIL) {
+    (*root) = (*root)->parent;
+  }
   (*root)->color = black;
   return;
 }
-#pragma endregion inserting
-#pragma region deletion
+
 void deleteCase0(Node *node) {
+  printCaseHeader(node, 0);
   node->color = black;
-  fixDeletion(node);
 }
 
 void deleteCase1(Node *node) {
-  if (node->parent->left == node) {
-    rotateLeft(getBrother(node));
-  } else {
-    rotateRight(getBrother(node));
-  }
+  printCaseHeader(node, 1);
+  Node *nextNode = node;
+  Node *brother = getBrother(node);
   node->parent->color = red;
-  node->parent->parent->color = black;
-  fixDeletion(node);
+  brother->color = black;
+  rotate(brother);
+  fixDeletion(nextNode);
 }
 
 void deleteCase2(Node *node) {
+  printCaseHeader(node, 2);
+  Node *nextNode = node->parent;
   getBrother(node)->color = red;
-  fixDeletion(node->parent);
-}
-
-void deleteCase3(Node *node) {
-  if (node->parent->left == node) {
-    Node *nephew = getBrother(node)->left;
-    rotateRight(nephew);
-    nephew->right->color = red;
-    nephew->color = black;
-  } else {
-    Node *nephew = getBrother(node)->right;
-    rotateRight(nephew);
-    nephew->left->color = red;
-    nephew->color = black;
-  }
-  deleteCase4(node);
+  fixDeletion(nextNode);
 }
 
 void deleteCase4(Node *node) {
+  printCaseHeader(node, 4);
   Node *brother = getBrother(node);
-  if (node->parent->left == node) {
-    rotateLeft(brother);
-    node->parent->parent->right->color = black;
-  } else {
-    rotateRight(brother);
-    node->parent->parent->left->color = black;
-  }
-  node->parent->parent->color = node->parent->color;
+  brother->color = node->parent->color;
   node->parent->color = black;
+  getBrotherRedTurningSon(node)->color = black;
+  rotate(brother);
+}
+
+void deleteCase3(Node *node) {
+  printCaseHeader(node, 3);
+  Node *brother = getBrother(node);
+  Node *brotherRedSon = getBrotherRedParallelSon(node);
+  brother->color = red;
+  brotherRedSon->color = black;
+  rotate(brotherRedSon);
+  deleteCase4(node);
 }
 
 void fixDeletion(Node *node) {
   if (node->color == red) return deleteCase0(node);
-
   Node *brother = getBrother(node);
-  if (brother->color == red) return deleteCase1(brother);
-
-  if (brother->left->color == black && brother->right->color == black)
-    return deleteCase2(node);
-
-  if (node->parent->left == node) {
-    if (brother->left->color == red && brother->right->color == black)
-      return deleteCase3(node);
+  if (brother->color == red)
+    deleteCase1(node);
+  else if (!hasSonOfColor(brother, red))
+    deleteCase2(node);
+  else {
+    if (hasSonOfColor(brother, black) && getBrotherRedParallelSon(node) != NIL)
+      deleteCase3(node);
     else
-      return deleteCase4(node);
-  } else {
-    if (brother->right->color == red && brother->left->color == black)
-      return deleteCase3(node);
-    else
-      return deleteCase4(node);
+      deleteCase4(node);
   }
 }
 
@@ -409,37 +380,41 @@ void destroyNode(Node *node) {
 }
 
 void deleteNode(Node **root, int value) {
+  // *node jest wskaźnikiem na węzeł przeznaczony do usunięcia
   Node *node = get(*root, value);
-  // Leaf case
-  if (node->left == NIL && NIL == node->right) destroyNode(node);
-  // Two child case
-  if (node->left != NIL && NIL != node->right) {
+  // Usuwana wartość jest w korzeniu
+  if (node == *root) {
+    (*root)->value = 0;
+    (*root)->color = empty;
+    return;
+  }
+  // Usuwany węzeł jest liściem
+  if (node->left == NIL && node->right == NIL) {
+    node = node;
+  } else if (node->left != NIL && node->right != NIL) {
+    // Usuwany węzeł ma dwoje synów
     Node *successor = inorderSuccessor(node);
     node->value = successor->value;
-    node->parent = successor->parent;
-    node->left = successor->left;
-    node->right = successor->right;
-    node->color = successor->color;
-    destroyNode(successor);
-  }
-  // One child case
-  if (node->left != NIL) {
+    node = successor;
+  } else if (node->left != NIL) {
+    // Usuwany węzeł ma jedno dziecko [lewe]
     node->value = node->left->value;
-    destroyNode(node->left);
+    node = node->left;
   } else {
+    // Usuwany węzeł ma jedno dziecko [prawe]
     node->value = node->right->value;
-    destroyNode(node->right);
+    node = node->right;
   }
-  // TODO: node ma być węzłem od którego zaczyna brakować czarnych
+
   fixDeletion(node);
+  destroyNode(node);
   // Korzeń może zostać zmieniony
   while ((*root)->parent != NIL) (*root) = (*root)->parent;
 
   (*root)->color = black;
   return;
 }
-#pragma endregion deletion
-#pragma region printing
+
 void printCaseHeader(Node *node, int n) {
   if (!isPrintingAllowed) return;
   printf("[Przypadek #%d ", n);
@@ -533,7 +508,7 @@ void printLevel(Node *node, int treeDepth, int level) {
 
 void print(Node *node) {
   if (!isPrintingAllowed) return;
-  if (node->value == -1) {
+  if (node->color == empty) {
     printf("\n(Drzewo puste)\n\n");
     return;
   }
@@ -549,8 +524,7 @@ void print(Node *node) {
   }
   printf("\n");
 }
-#pragma endregion printing
-#pragma region tests
+
 void testInsertion(Node **tree) {
   printf("(xxx) - Węzeł czerwony, [xxx] - Węzeł czarny\n");
   print(*tree);
@@ -610,7 +584,6 @@ void testDeletion(Node **tree) {
   printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
   getchar();
 }
-#pragma endregion tests
 
 int main() {
   nilNode.parent = NIL;
@@ -618,13 +591,17 @@ int main() {
   nilNode.right = NIL;
   Node *tree = newRedBlackTree();
 
-  // testInsertion(&tree); // Wstawianie krok po kroku
+  // testInsertion(&tree);  // Wstawianie krok po kroku
   testInsertionHiddenOutput(&tree);
-  // testDeletion(&tree);
+  testDeletion(&tree);
   return 0;
 }
 
-// Ostatnia zmiana: fixDeletion
-//
-// Zrobić algorytm który wyszuka pierwszy węzeł od którego zaczyna brakować
-// czarnych.
+/*
+
+- Łatwiejsze algorytmy na przypadki wstawiania i usuwania
+- Spróbować wyjebać jak najwięcej testów czy node jest nil
+- Sprytna rotacja
+- Komplet funkcji na pobranie ojca, brata, wujka, dziadka, syna czerwonego itd.
+- Odpowienio ^^^ naprawić tworzenie drzewa
+*/
