@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 bool isPrintingAllowed = true;
 
+// Kolor 'empty' jest specjalnym kolorem tylko dla pustego korzenia
 typedef enum Color { red, black, empty } Color;
 
 typedef struct Node {
@@ -54,9 +54,15 @@ Node *makeNode(Node *parent, int value) {
 
 Node *get(Node *node, int value) {
   if (node == NIL) return NIL;
+
+  Node *leftChild = get(node->left, value);
+  if (leftChild->value == value) return leftChild;
+
+  Node *rightChild = get(node->right, value);
+  if (rightChild->value == value) return rightChild;
+
   if (node->value == value) return node;
-  node = (value <= node->value) ? node->left : node->right;
-  return get(node, value);
+  else return NIL;
 }
 
 // NIL returns NIL
@@ -88,8 +94,7 @@ Node *getBrotherRedParallelSon(Node *node) {
   if (brother->right->color == red && areParallel(node, brother->right))
     return brother->right;
   else
-    printNode(node);
-  return NIL;
+    return NIL;
 }
 
 Node *getBrotherRedTurningSon(Node *node) {
@@ -99,8 +104,7 @@ Node *getBrotherRedTurningSon(Node *node) {
   if (brother->right->color == red && !areParallel(node, brother->right))
     return brother->right;
   else
-    printNode(node);
-  return NIL;
+    return NIL;
 }
 
 bool hasSonOfColor(Node *node, Color color) {
@@ -111,10 +115,12 @@ bool hasSonOfColor(Node *node, Color color) {
     return false;
 }
 
-// Użyte tylko w przypadku drzewa z którego usuwamy węzeł z dwoma synami
+// Użyte tylko w przypadku drzewa z którego usuwamy węzeł z dwoma synami.
+// Węzeł taki zawsze będzie miał prawe poddrzewo, w którym znajdziemy jego
+// następnika (węzeł maksymalnie na lewo)
 Node *inorderSuccessor(Node *node) {
-  for (node = node->right; node->left != NIL; node = node->left) {
-  }
+  node = node->right;
+  while (node->left != NIL) node = node->left;
   return node;
 }
 
@@ -167,23 +173,6 @@ int redNodesCount(Node *node) {
   if (node == NIL) return 0;
   return ((node->color == red) ? 1 : 0) + redNodesCount(node->left) +
          redNodesCount(node->right);
-}
-
-int *getRandomSequence(int n) {
-  srand(time(NULL));
-  int *array = (int *)calloc(n, sizeof(int));
-  // Generate sequence 1...n
-  for (int i = 0; i < n; i++) {
-    array[i] = i + 1;
-  }
-  // Shuffle sequence
-  for (int i = 0, j = 0; i < n; i++) {
-    j = rand() % (n - i) + i;
-    int tmp = array[i];
-    array[i] = array[j];
-    array[j] = tmp;
-  }
-  return array;
 }
 
 void rotateLeft(Node *node) {
@@ -370,7 +359,7 @@ void fixDeletion(Node *node) {
   }
 }
 
-// Free memory
+// Zwalnianie pamięci
 void destroyNode(Node *node) {
   if (node->parent->left == node)
     node->parent->left = NIL;
@@ -382,12 +371,11 @@ void destroyNode(Node *node) {
 void deleteNode(Node **root, int value) {
   // *node jest wskaźnikiem na węzeł przeznaczony do usunięcia
   Node *node = get(*root, value);
-  // Usuwana wartość jest w korzeniu
-  if (node == *root) {
-    (*root)->value = 0;
-    (*root)->color = empty;
+  if (node == NIL) {
+    printf("Wartość %d nie znajduje się w drzewie!\n", value);
     return;
   }
+
   // Usuwany węzeł jest liściem
   if (node->left == NIL && node->right == NIL) {
     node = node;
@@ -397,17 +385,23 @@ void deleteNode(Node **root, int value) {
     node->value = successor->value;
     node = successor;
   } else if (node->left != NIL) {
-    // Usuwany węzeł ma jedno dziecko [lewe]
+    // Usuwany węzeł ma jedno dziecko (lewe)
     node->value = node->left->value;
     node = node->left;
   } else {
-    // Usuwany węzeł ma jedno dziecko [prawe]
+    // Usuwany węzeł ma jedno dziecko (prawe)
     node->value = node->right->value;
     node = node->right;
   }
 
   fixDeletion(node);
-  destroyNode(node);
+  // Usuwana wartość jest w korzeniu
+  if (node == *root) {
+    (*root)->value = 0;
+    (*root)->color = empty;
+    return;
+  } else
+    destroyNode(node);
   // Korzeń może zostać zmieniony
   while ((*root)->parent != NIL) (*root) = (*root)->parent;
 
@@ -423,11 +417,9 @@ void printCaseHeader(Node *node, int n) {
 }
 
 void printNode(Node *node) {
-  if (node == NIL) {
+  if (node == NIL)
     printf("     ");
-    return;
-  }
-  if (node->color == red)
+  else if (node->color == red)
     printf("(%03d)", node->value);
   else
     printf("[%03d]", node->value);
@@ -549,25 +541,9 @@ void testInsertion(Node **tree) {
   getchar();
 }
 
-void testInsertionHiddenOutput(Node **tree) {
-  isPrintingAllowed = false;
-  // Wstawianie elementów
-  int numbers[] = {38, 31, 22, 8, 20, 5, 10, 9, 21, 27, 29, 25, 28};
-  int numbersLenght = sizeof(numbers) / sizeof(numbers[0]);
-  for (int i = 0; i < numbersLenght; i++) {
-    insertNode(tree, numbers[i]);
-  }
-  isPrintingAllowed = true;
-  printf("(xxx) - Węzeł czerwony, [xxx] - Węzeł czarny\n");
-  print(*tree);
-  printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
-  printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
-  printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
-}
-
 void testDeletion(Node **tree) {
   // Usuwanie elementów
-  int numbers[] = {5, 38, 8, 10, 22, 20, 29, 31};
+  int numbers[] = {5, 38, 8, 10, 22, 20, 29, 31, 27, 21, 9, 25, 28};
   int numbersLenght = sizeof(numbers) / sizeof(numbers[0]);
   for (int i = 0; i < numbersLenght; i++) {
     printf("Usuń ");
@@ -578,10 +554,36 @@ void testDeletion(Node **tree) {
     print(*tree);
     printf("Usunięto: %03d ###\n", numbers[i]);
   }
-  printf("Zakończono usuwanie: ");
   printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
   printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
   printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
+  printf("Zakończono usuwanie: ");
+  getchar();
+}
+
+void testInsertionRandom(Node **tree, int n) {
+  isPrintingAllowed = false;
+  for (int i = 1; i <= n; i++) {
+    insertNode(tree, n);
+  }
+  isPrintingAllowed = true;
+  printf("\nIlość czerwonych węzłów: %d\n", redNodesCount(*tree));
+  printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
+  printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
+  printf("Zakończono wstawianie: ");
+  getchar();
+}
+
+void testDeletionRandom(Node **tree, int n) {
+  isPrintingAllowed = false;
+  for (int i = 1; i <= n; i++) {
+    deleteNode(tree, n);
+  }
+  isPrintingAllowed = true;
+  printf("\nIlość czerwonych węzłów: %d\n", redNodesCount(*tree));
+  printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
+  printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
+  printf("Zakończono usuwanie: ");
   getchar();
 }
 
@@ -590,18 +592,13 @@ int main() {
   nilNode.left = NIL;
   nilNode.right = NIL;
   Node *tree = newRedBlackTree();
+  int testSize = 1000;
 
-  // testInsertion(&tree);  // Wstawianie krok po kroku
-  testInsertionHiddenOutput(&tree);
+  testInsertion(&tree);
   testDeletion(&tree);
+  printf("\n\n### Test na dużych danych (%d węzłów) ###\n\n", testSize);
+  testInsertionRandom(&tree, testSize);
+  testDeletionRandom(&tree, testSize);
+
   return 0;
 }
-
-/*
-
-- Łatwiejsze algorytmy na przypadki wstawiania i usuwania
-- Spróbować wyjebać jak najwięcej testów czy node jest nil
-- Sprytna rotacja
-- Komplet funkcji na pobranie ojca, brata, wujka, dziadka, syna czerwonego itd.
-- Odpowienio ^^^ naprawić tworzenie drzewa
-*/
