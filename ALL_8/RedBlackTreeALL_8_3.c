@@ -52,6 +52,7 @@ Node *makeNode(Node *parent, int value) {
   return newNode;
 }
 
+// Pobiera węzeł najdalej od korzenia (w przypadku)
 Node *get(Node *node, int value) {
   if (node == NIL) return NIL;
 
@@ -61,8 +62,10 @@ Node *get(Node *node, int value) {
   Node *rightChild = get(node->right, value);
   if (rightChild->value == value) return rightChild;
 
-  if (node->value == value) return node;
-  else return NIL;
+  if (node->value == value)
+    return node;
+  else
+    return NIL;
 }
 
 // NIL returns NIL
@@ -259,7 +262,6 @@ void insertCase2(Node *node) {
 void fixInsertion(Node *node) {
   // Napotkano korzeń:
   if (node->parent == NIL) return;
-  // Rodzic czarny
   if (node->parent->color == black) return;
 
   // Narysuj krok pośredni
@@ -297,7 +299,7 @@ void insertNode(Node **root, int value) {
   node = makeNode(parent, value);
   fixInsertion(node);
 
-  // Korzeń może zostać zmieniony (rotacja)
+  // Korzeń może zostać zmieniony rotacją
   while ((*root)->parent != NIL) {
     (*root) = (*root)->parent;
   }
@@ -396,6 +398,8 @@ void deleteNode(Node **root, int value) {
     node = node->right;
   }
   // Usuwana wartość jest w korzeniu
+  // Ten fragment musi być umieszczony tutaj, by uniknąć błędów przy usuwaniu
+  // węzłów z wartościami które powtrzają się w drzewie
   if (node == *root) {
     (*root)->value = 0;
     (*root)->color = empty;
@@ -416,7 +420,7 @@ void printCaseHeader(Node *node, int n) {
   if (!isPrintingAllowed) return;
   printf("[Przypadek #%d ", n);
   printNode(node);
-  printf("]:\n");
+  printf("]\n");
 }
 
 void printNode(Node *node) {
@@ -464,15 +468,17 @@ void printLinesAtLevel(Node *node, int treeDepth, int level, int currentLevel) {
     }
 
     // Rysowanie linii (łączenie)
-    if (node->left == NIL)
+    if (node->left == NIL) {
       if (node->right == NIL)
         printf(" ");
       else
         printf("└");
-    else if (node->right == NIL)
-      printf("┘");
-    else
-      printf("┴");
+    } else {
+      if (node->right == NIL)
+        printf("┘");
+      else
+        printf("┴");
+    }
 
     // Rysowanie linii (drugi segment)
     if (node->right != NIL) {
