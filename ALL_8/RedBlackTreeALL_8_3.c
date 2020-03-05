@@ -151,6 +151,7 @@ bool isTurning(Node *node) {
 
 int minDepth(Node *node) {
   if (node == NIL) return 0;
+  if (node->color == empty) return -1;
   int leftDepth = minDepth(node->left) + 1;
   int rightDepth = minDepth(node->right) + 1;
   return (leftDepth < rightDepth ? leftDepth : rightDepth);
@@ -158,6 +159,7 @@ int minDepth(Node *node) {
 
 int maxDepth(Node *node) {
   if (node == NIL) return 0;
+  if (node->color == empty) return -1;
   int leftDepth = maxDepth(node->left) + 1;
   int rightDepth = maxDepth(node->right) + 1;
   return (leftDepth > rightDepth ? leftDepth : rightDepth);
@@ -393,15 +395,16 @@ void deleteNode(Node **root, int value) {
     node->value = node->right->value;
     node = node->right;
   }
-
-  fixDeletion(node);
   // Usuwana wartość jest w korzeniu
   if (node == *root) {
     (*root)->value = 0;
     (*root)->color = empty;
     return;
-  } else
-    destroyNode(node);
+  }
+
+  fixDeletion(node);
+  destroyNode(node);
+
   // Korzeń może zostać zmieniony
   while ((*root)->parent != NIL) (*root) = (*root)->parent;
 
@@ -535,8 +538,8 @@ void testInsertion(Node **tree) {
   }
 
   printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
-  printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
-  printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
+  printf("Najmniejsza głębokość: %d\n", minDepth(*tree));
+  printf("Największa głębokość: %d\n", maxDepth(*tree));
   printf("Zakończono wstawianie: ");
   getchar();
 }
@@ -555,8 +558,8 @@ void testDeletion(Node **tree) {
     printf("Usunięto: %03d ###\n", numbers[i]);
   }
   printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
-  printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
-  printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
+  printf("Najmniejsza głębokość: %d\n", minDepth(*tree));
+  printf("Największa głębokość: %d\n", maxDepth(*tree));
   printf("Zakończono usuwanie: ");
   getchar();
 }
@@ -568,8 +571,8 @@ void testInsertionRandom(Node **tree, int n) {
   }
   isPrintingAllowed = true;
   printf("\nIlość czerwonych węzłów: %d\n", redNodesCount(*tree));
-  printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
-  printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
+  printf("Najmniejsza głębokość: %d\n", minDepth(*tree));
+  printf("Największa głębokość: %d\n", maxDepth(*tree));
   printf("Zakończono wstawianie: ");
   getchar();
 }
@@ -581,8 +584,8 @@ void testDeletionRandom(Node **tree, int n) {
   }
   isPrintingAllowed = true;
   printf("\nIlość czerwonych węzłów: %d\n", redNodesCount(*tree));
-  printf("Najmniejsza głębokość: %d\n", minDepth(*tree) - 1);
-  printf("Największa głębokość: %d\n", maxDepth(*tree) - 1);
+  printf("Najmniejsza głębokość: %d\n", minDepth(*tree));
+  printf("Największa głębokość: %d\n", maxDepth(*tree));
   printf("Zakończono usuwanie: ");
   getchar();
 }
