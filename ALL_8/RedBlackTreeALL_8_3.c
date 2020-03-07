@@ -237,7 +237,7 @@ void rotate(Node *node) {
 
 // *nextNode - wskaźnik na węzeł, który jest kolejnym kandydatem na naprawę:
 void insertCase1(Node *node) {
-  printCaseHeader(node, 1);
+  // printCaseHeader(node, 1);
   Node *nextNode = node->parent->parent;
   nextNode->color = red;
   node->parent->color = black;
@@ -246,14 +246,14 @@ void insertCase1(Node *node) {
 }
 
 void insertCase3(Node *node) {
-  printCaseHeader(node, 3);
+  // printCaseHeader(node, 3);
   node->parent->color = black;
   node->parent->parent->color = red;
   rotate(node->parent);
 }
 
 void insertCase2(Node *node) {
-  printCaseHeader(node, 2);
+  // printCaseHeader(node, 2);
   Node *nextNode = node->parent;
   rotate(node);
   insertCase3(nextNode);
@@ -265,9 +265,9 @@ void fixInsertion(Node *node) {
   if (node->parent->color == black) return;
 
   // Narysuj krok pośredni
-  Node *tmp = node;
-  while (tmp->parent != NIL) tmp = tmp->parent;
-  print(tmp);
+  // Node *tmp = node;
+  // while (tmp->parent != NIL) tmp = tmp->parent;
+  // print(tmp);
 
   // Naprawianie
   if (getUncle(node)->color == red)
@@ -308,12 +308,12 @@ void insertNode(Node **root, int value) {
 }
 
 void deleteCase0(Node *node) {
-  printCaseHeader(node, 0);
+  // printCaseHeader(node, 0);
   node->color = black;
 }
 
 void deleteCase1(Node *node) {
-  printCaseHeader(node, 1);
+  // printCaseHeader(node, 1);
   Node *nextNode = node;
   Node *brother = getBrother(node);
   node->parent->color = red;
@@ -323,14 +323,14 @@ void deleteCase1(Node *node) {
 }
 
 void deleteCase2(Node *node) {
-  printCaseHeader(node, 2);
+  // printCaseHeader(node, 2);
   Node *nextNode = node->parent;
   getBrother(node)->color = red;
   fixDeletion(nextNode);
 }
 
 void deleteCase4(Node *node) {
-  printCaseHeader(node, 4);
+  // printCaseHeader(node, 4);
   Node *brother = getBrother(node);
   brother->color = node->parent->color;
   node->parent->color = black;
@@ -339,7 +339,7 @@ void deleteCase4(Node *node) {
 }
 
 void deleteCase3(Node *node) {
-  printCaseHeader(node, 3);
+  // printCaseHeader(node, 3);
   Node *brother = getBrother(node);
   Node *brotherRedSon = getBrotherRedParallelSon(node);
   brother->color = red;
@@ -546,7 +546,7 @@ void testInsertion(Node **tree) {
   printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
   printf("Najmniejsza głębokość: %d\n", minDepth(*tree));
   printf("Największa głębokość: %d\n", maxDepth(*tree));
-  printf("Zakończono wstawianie: ");
+  printf("Zakończono wstawianie [Enter]: ");
   getchar();
 }
 
@@ -566,7 +566,7 @@ void testDeletion(Node **tree) {
   printf("Ilość czerwonych węzłów: %d\n", redNodesCount(*tree));
   printf("Najmniejsza głębokość: %d\n", minDepth(*tree));
   printf("Największa głębokość: %d\n", maxDepth(*tree));
-  printf("Zakończono usuwanie: ");
+  printf("Zakończono usuwanie [Enter]: ");
   getchar();
 }
 
@@ -579,7 +579,7 @@ void testInsertionRandom(Node **tree, int n) {
   printf("\nIlość czerwonych węzłów: %d\n", redNodesCount(*tree));
   printf("Najmniejsza głębokość: %d\n", minDepth(*tree));
   printf("Największa głębokość: %d\n", maxDepth(*tree));
-  printf("Zakończono wstawianie: ");
+  printf("Zakończono wstawianie [Enter]: ");
   getchar();
 }
 
@@ -592,7 +592,7 @@ void testDeletionRandom(Node **tree, int n) {
   printf("\nIlość czerwonych węzłów: %d\n", redNodesCount(*tree));
   printf("Najmniejsza głębokość: %d\n", minDepth(*tree));
   printf("Największa głębokość: %d\n", maxDepth(*tree));
-  printf("Zakończono usuwanie: ");
+  printf("Zakończono usuwanie [Enter]: ");
   getchar();
 }
 
