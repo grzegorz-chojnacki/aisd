@@ -1,4 +1,3 @@
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,7 +13,7 @@ typedef struct LCSMatrix {
   int sizeY;
 } LCSMatrix;
 
-#pragma region printing
+// Wyświetlanie poziomej podziałki
 void printHR(int size) {
   printf("+----+");
   for (int i = 0; i < size; i++) printf("----");
@@ -22,6 +21,7 @@ void printHR(int size) {
 }
 
 void printMatrix(LCSMatrix *matrix, char *stringA, char *stringB) {
+  // Nagłówek
   printHR(matrix->sizeX);
   printf("| y\\x|    ");
   for (int x = 0; x < matrix->sizeX - 1; x++) printf(" %2c ", stringA[x]);
@@ -29,41 +29,57 @@ void printMatrix(LCSMatrix *matrix, char *stringA, char *stringB) {
   printHR(matrix->sizeX);
   // Wnętrze macierzy
   for (int y = 0; y < matrix->sizeY; y++) {
-    if (y == 0)
+    // Pierwsza kolumna
+    if (y == 0) {
       printf("|    |");
-    else
+    } else {
       printf("| %2c |", stringB[y - 1]);
+    }
+
     for (int x = 0; x < matrix->sizeX; x++) {
       printf(" %1c%1d ", matrix->content[y][x]->symbol,
              matrix->content[y][x]->value);
     }
     printf("|\n");
   }
+
   printHR(matrix->sizeX);
 }
-#pragma endregion printing
 
-void printLCSHelper(LCSMatrix *matrix, char *string, int x, int y) {
+// letter to indeks litery do zmodyfikowania (konwencja 1..n) w tablicy output.
+// Domyślnie zaczyna jako wartość w prawym dolnym rogu LCSMatrix, i wskazuje
+// malejąco kolejne litery do przepisania do tablicy output
+void printLCSHelper(LCSMatrix *matrix, char *string, int letter, char *output,
+                    int x, int y) {
   if (x == 0 || y == 0) {
-    printf("\n - ");
+    // Wyświetlamy tablice znaków output[] tylko jeżeli została wypełniona
+    // do końca (letter w poprzednim wywołaniu == 1, czyli została zmieniona
+    // pierwsza litera)
+    if (letter == 0) printf(" - %s\n", output);
+    // Nie trzeba dbać o zerowanie output, bo jeżeli ma być wyświetlona, to
+    // na pewno zostanie nadpisana w całości
     return;
   }
   if (matrix->content[y][x]->symbol == '\\') {
-    printLCSHelper(matrix, string, x - 1, y - 1);
-    printf("%c", string[x - 1]);
-  } else if (matrix->content[y][x]->symbol == '|') {
-    printLCSHelper(matrix, string, x, y - 1);
+    output[letter - 1] = string[x - 1];
+    printLCSHelper(matrix, string, letter - 1, output, x - 1, y - 1);
   } else {
-    printLCSHelper(matrix, string, x - 1, y);
+    printLCSHelper(matrix, string, letter, output, x, y - 1);
+    printLCSHelper(matrix, string, letter, output, x - 1, y);
   }
 }
 
 void printLCS(LCSMatrix *matrix, char *stringA, char *stringB) {
   int x = strlen(stringA);
   int y = strlen(stringB);
-  printf("Najdłuższe wspólne podciągi \"%s\" i \"%s\" to:", stringA, stringB);
-  printLCSHelper(matrix, stringA, x, y);
-  printf("\n");
+  // Długość najdłuższego ciągu znaków - wyświetlamy tylko przypadki których
+  // długość jest równa tej wartości
+  int LCSLength = matrix->content[y][x]->value;
+  // String przechowujący kandydata do wyświetlenia ( + ostatni znak null)
+  char *output = (char *)calloc(LCSLength + 1, sizeof(char));
+  printf("Warianty najdłuższych wspólnych podciągów \"%s\" i \"%s\" to:\n",
+         stringA, stringB);
+  printLCSHelper(matrix, stringA, LCSLength, output, x, y);
 }
 
 LCSMatrix *makeMatrix(int sizeX, int sizeY) {
@@ -86,8 +102,10 @@ LCSMatrix *getLCSMatrix(char *stringA, char *stringB) {
   int lengthB = strlen(stringB);
   LCSMatrix *matrix = makeMatrix(lengthA + 1, lengthB + 1);
 
-  // y - indeks poruszania się pionowo w tabeli == j
-  // x - indeks poruszania się poziomo w tabeli == i
+  // y - indeks poruszania się pionowo w tabeli
+  // x - indeks poruszania się poziomo w tabeli
+  // Dostęp do liter łańcucha znaków według konwencji 1..n
+  // Dostęp do komórek w macierzy według konwencji 0..n - 1
   for (int y = 1; y <= lengthB; y++) {
     for (int x = 1; x <= lengthA; x++) {
       if (stringA[x - 1] == stringB[y - 1]) {
@@ -108,8 +126,8 @@ LCSMatrix *getLCSMatrix(char *stringA, char *stringB) {
 }
 
 int main() {
-  char stringA[] = "SPAWACZ";
-  char stringB[] = "SPRAWA";
+  char stringA[] = "abbaac";
+  char stringB[] = "bacbacba";
   LCSMatrix *matrix = getLCSMatrix(stringA, stringB);
   printMatrix(matrix, stringA, stringB);
   printLCS(matrix, stringA, stringB);
