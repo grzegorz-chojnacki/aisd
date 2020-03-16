@@ -20,7 +20,7 @@ void printHR(int size) {
   printf("+\n");
 }
 
-void printMatrix(LCSMatrix *matrix, char *stringA, char *stringB) {
+void printMatrix(LCSMatrix *matrix, const char *stringA, const char *stringB) {
   // Nagłówek
   printHR(matrix->sizeX);
   printf("| y\\x|    ");
@@ -49,13 +49,13 @@ void printMatrix(LCSMatrix *matrix, char *stringA, char *stringB) {
 // letter to indeks litery do zmodyfikowania (konwencja 1..n) w tablicy output.
 // Domyślnie zaczyna jako wartość w prawym dolnym rogu LCSMatrix, i wskazuje
 // malejąco kolejne litery do przepisania do tablicy output
-void printLCSHelper(LCSMatrix *matrix, char *string, int letter, char *output,
+void printLCSHelper(LCSMatrix *matrix, const char *string, int letter, char *output,
                     int x, int y) {
   if (x == 0 || y == 0) {
     // Wyświetlamy tablice znaków output[] tylko jeżeli została wypełniona
     // do końca (letter w poprzednim wywołaniu == 1, czyli została zmieniona
     // pierwsza litera)
-    if (letter == 0) printf(" - %s\n", output);
+    if (letter == 0) printf(" - \"%s\"\n", output);
     // Nie trzeba dbać o zerowanie output, bo jeżeli ma być wyświetlona, to
     // na pewno zostanie nadpisana w całości
     return;
@@ -69,7 +69,7 @@ void printLCSHelper(LCSMatrix *matrix, char *string, int letter, char *output,
   }
 }
 
-void printLCS(LCSMatrix *matrix, char *stringA, char *stringB) {
+void printLCS(LCSMatrix *matrix, const char *stringA, const char *stringB) {
   int x = strlen(stringA);
   int y = strlen(stringB);
   // Długość najdłuższego ciągu znaków - wyświetlamy tylko przypadki których
@@ -97,7 +97,7 @@ LCSMatrix *makeMatrix(int sizeX, int sizeY) {
   return matrix;
 }
 
-LCSMatrix *getLCSMatrix(char *stringA, char *stringB) {
+LCSMatrix *getLCSMatrix(const char *stringA, const char *stringB) {
   int lengthA = strlen(stringA);
   int lengthB = strlen(stringB);
   LCSMatrix *matrix = makeMatrix(lengthA + 1, lengthB + 1);
@@ -125,11 +125,21 @@ LCSMatrix *getLCSMatrix(char *stringA, char *stringB) {
   return matrix;
 }
 
-int main() {
-  char stringA[] = "abbaac";
-  char stringB[] = "bacbacba";
+
+int main(int argc, char const *argv[]) {
+  const char *stringA;
+  const char *stringB;
+  if (argc != 3) {
+    printf("Nie podano napisów do porównania\n");
+    printf("Dane testowe: \"abbaac\", \"bacbacba\"\n\n");
+    stringA = "abbaac";
+    stringB = "bacbacba";
+  } else {
+    stringA = argv[1];
+    stringB = argv[2];
+  }
   LCSMatrix *matrix = getLCSMatrix(stringA, stringB);
-  printMatrix(matrix, stringA, stringB);
+  // printMatrix(matrix, stringA, stringB);
   printLCS(matrix, stringA, stringB);
   return 0;
 }
