@@ -1,4 +1,7 @@
-# Junk Files
+# Java files
+*.class
+
+# Junk files
 *.zip
 *.pdf
 pmp.c
