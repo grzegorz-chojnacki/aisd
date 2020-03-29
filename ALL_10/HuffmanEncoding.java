@@ -2,23 +2,25 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
 
 // Tablica kodowa
 class Table {
   private List<Node> nodes = new ArrayList<Node>();
+  // Używane do ładnego wyświetlania
   private int highestFrequency = 0;
 
   Table(int[] ASCIITable) {
     for (int i = 0; i < ASCIITable.length; i++) {
       if (ASCIITable[i] > 0) {
-        highestFrequency = (highestFrequency < ASCIITable[i]) ? ASCIITable[i] : highestFrequency;
         Node node = new Node((char) i, ASCIITable[i]);
         nodes.add(node);
+        highestFrequency = Math.max(highestFrequency, ASCIITable[i]);
       }
     }
-    nodes.sort((Node A, Node B) -> Integer.compare(A.getFrequency(), B.getFrequency()));
+    nodes.sort(Comparator.comparingInt(node -> node.getFrequency()));
     buildTree();
   }
 
@@ -142,20 +144,20 @@ public class HuffmanEncoding {
       return;
     }
 
-    File file = new File(args[0]);
     int[] ASCIITable = new int[256];
     int originalFileLength = 0;
 
-    try (FileReader fileReader = new FileReader(file)) {
-      int character;
-      while ((character = fileReader.read()) != -1) {
+    try (FileReader fileReader = new FileReader(new File(args[0]))) {
+      byte character;
+      while ((character = (byte)fileReader.read()) != -1) {
         originalFileLength++;
-        ASCIITable[character % 256]++;
+        ASCIITable[character]++;
       }
     } catch (IOException e) {
       System.out.println("Błąd pliku");
       return;
     }
+
     Table table = new Table(ASCIITable);
     table.print();
     System.out.println("Długość oryginalnego pliku (bity): " + originalFileLength * 8);
