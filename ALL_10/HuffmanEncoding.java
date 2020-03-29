@@ -2,9 +2,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.ListIterator;
+
 
 // Tablica kodowa
 class Table {
@@ -16,12 +16,26 @@ class Table {
     for (int i = 0; i < ASCIITable.length; i++) {
       if (ASCIITable[i] > 0) {
         Node node = new Node((char) i, ASCIITable[i]);
-        nodes.add(node);
+        addInOrder(nodes, node);
         highestFrequency = Math.max(highestFrequency, ASCIITable[i]);
       }
     }
-    nodes.sort(Comparator.comparingInt(node -> node.getFrequency()));
+
     buildTree();
+  }
+
+  // Wstaw węzeł tak, aby lista pozostała posortowana
+  private void addInOrder(List<Node> nodes, Node newNode) {
+    ListIterator<Node> iterator = nodes.listIterator();
+    while (iterator.hasNext()) {
+      Node node = iterator.next();
+      if (node.getFrequency() > newNode.getFrequency()) {
+        nodes.add(iterator.nextIndex(), newNode);
+        return;
+      }
+    }
+    // Nowy węzeł rozgałęziający ma największą wartość i trafia na koniec listy
+    nodes.add(newNode);
   }
 
   private void buildTree() {
@@ -34,17 +48,7 @@ class Table {
     nodes.remove(A);
     nodes.remove(B);
 
-    ListIterator<Node> iterator = nodes.listIterator();
-    while (iterator.hasNext()) {
-      Node node = iterator.next();
-      if (node.getFrequency() > C.getFrequency()) {
-        nodes.add(iterator.nextIndex(), C);
-        buildTree();
-        return;
-      }
-    }
-    // Nowy węzeł rozgałęziający ma największą wartość i trafia na koniec listy
-    nodes.add(C);
+    addInOrder(nodes, C);
     buildTree();
   }
 
