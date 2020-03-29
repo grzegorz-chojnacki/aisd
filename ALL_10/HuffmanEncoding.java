@@ -6,17 +6,26 @@ import java.util.List;
 import java.util.ListIterator;
 
 // Dekorator listy
-class NodeList extends ArrayList {
+class NodeList extends ArrayList<Node> {
+  private static final long serialVersionUID = 1L;
   private List<Node> nodes;
 
   NodeList(List<Node> nodes) {
     this.nodes = nodes;
   }
 
+  public int size() {
+    return nodes.size();
+  }
+
   public Node popHead() {
     Node head = nodes.get(0);
     nodes.remove(0);
     return head;
+  }
+
+  public Node head() {
+    return nodes.get(0);
   }
 
   // Wstaw węzeł tak, aby lista pozostała posortowana
@@ -66,7 +75,7 @@ class Table {
   }
 
   public int getCompressedSize() {
-    return getCompressedSizeHelper(nodes.popHead(), 0);
+    return getCompressedSizeHelper(nodes.head(), 0);
   }
 
   private int getCompressedSizeHelper(Node node, int codeSize) {
@@ -80,7 +89,7 @@ class Table {
 
   public void print() {
     System.out.println("Tabela kodu:");
-    printHelper(nodes.popHead(), "");
+    printHelper(nodes.head(), "");
   }
 
   private int numberOfDigits(int number) {
