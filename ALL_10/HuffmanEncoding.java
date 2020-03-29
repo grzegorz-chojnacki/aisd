@@ -5,27 +5,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+// Dekorator listy
+class NodeList extends ArrayList {
+  private List<Node> nodes;
 
-// Tablica kodowa
-class Table {
-  private List<Node> nodes = new ArrayList<Node>();
-  // Używane do ładnego wyświetlania
-  private int highestFrequency = 0;
+  NodeList(List<Node> nodes) {
+    this.nodes = nodes;
+  }
 
-  Table(int[] ASCIITable) {
-    for (int i = 0; i < ASCIITable.length; i++) {
-      if (ASCIITable[i] > 0) {
-        Node node = new Node((char) i, ASCIITable[i]);
-        addInOrder(nodes, node);
-        highestFrequency = Math.max(highestFrequency, ASCIITable[i]);
-      }
-    }
-
-    buildTree();
+  public Node popHead() {
+    Node head = nodes.get(0);
+    nodes.remove(0);
+    return head;
   }
 
   // Wstaw węzeł tak, aby lista pozostała posortowana
-  private void addInOrder(List<Node> nodes, Node newNode) {
+  public void addInOrder(Node newNode) {
     ListIterator<Node> iterator = nodes.listIterator();
     while (iterator.hasNext()) {
       Node node = iterator.next();
@@ -38,22 +33,40 @@ class Table {
     nodes.add(newNode);
   }
 
+}
+
+// Tablica kodowa
+class Table {
+  private NodeList nodes = new NodeList(new ArrayList<Node>());
+  // Używane do ładnego wyświetlania
+  private int highestFrequency = 0;
+
+  Table(int[] ASCIITable) {
+    for (int i = 0; i < ASCIITable.length; i++) {
+      if (ASCIITable[i] > 0) {
+        Node node = new Node((char) i, ASCIITable[i]);
+        nodes.addInOrder(node);
+        highestFrequency = Math.max(highestFrequency, ASCIITable[i]);
+      }
+    }
+
+    buildTree();
+  }
+
   private void buildTree() {
     if (nodes.size() <= 1)
       return;
-    Node A = nodes.get(0);
-    Node B = nodes.get(1);
+    Node A = nodes.popHead();
+    Node B = nodes.popHead();
     Node C = new Node();
     C.setAsParentOf(A, B);
-    nodes.remove(A);
-    nodes.remove(B);
 
-    addInOrder(nodes, C);
+    nodes.addInOrder(C);
     buildTree();
   }
 
   public int getCompressedSize() {
-    return getCompressedSizeHelper(nodes.get(0), 0);
+    return getCompressedSizeHelper(nodes.popHead(), 0);
   }
 
   private int getCompressedSizeHelper(Node node, int codeSize) {
@@ -67,7 +80,7 @@ class Table {
 
   public void print() {
     System.out.println("Tabela kodu:");
-    printHelper(nodes.get(0), "");
+    printHelper(nodes.popHead(), "");
   }
 
   private int numberOfDigits(int number) {
