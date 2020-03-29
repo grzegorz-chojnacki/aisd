@@ -5,28 +5,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-// Dekorator listy
-class NodeList extends ArrayList<Node> {
-  private static final long serialVersionUID = 1L;
+// Wrapper listy
+class NodeList {
   private List<Node> nodes;
 
-  NodeList(List<Node> nodes) {
-    this.nodes = nodes;
-  }
-
-  public int size() {
-    return nodes.size();
-  }
-
-  public Node popHead() {
-    Node head = nodes.get(0);
-    nodes.remove(0);
-    return head;
-  }
-
-  public Node head() {
-    return nodes.get(0);
-  }
+  NodeList(List<Node> nodes) {this.nodes = nodes;}
+  public int size() {return nodes.size();}
+  public Node popHead() {return nodes.remove(0);}
+  public Node head() {return nodes.get(0);}
 
   // Wstaw węzeł tak, aby lista pozostała posortowana
   public void addInOrder(Node newNode) {
@@ -41,7 +27,6 @@ class NodeList extends ArrayList<Node> {
     // Nowy węzeł rozgałęziający ma największą wartość i trafia na koniec listy
     nodes.add(newNode);
   }
-
 }
 
 // Tablica kodowa
@@ -58,13 +43,11 @@ class Table {
         highestFrequency = Math.max(highestFrequency, ASCIITable[i]);
       }
     }
-
     buildTree();
   }
 
   private void buildTree() {
-    if (nodes.size() <= 1)
-      return;
+    if (nodes.size() <= 1) return;
     Node A = nodes.popHead();
     Node B = nodes.popHead();
     Node C = new Node();
@@ -74,17 +57,15 @@ class Table {
     buildTree();
   }
 
+  // Przechodzi drzewo i zwraca ilość bitów potrzebnych do zakodowania wiadomości
   public int getCompressedSize() {
     return getCompressedSizeHelper(nodes.head(), 0);
   }
 
   private int getCompressedSizeHelper(Node node, int codeSize) {
-    if (node.isLeaf()) {
-      return codeSize * node.getFrequency();
-    } else {
-      return getCompressedSizeHelper(node.getRight(), codeSize + 1)
-          + getCompressedSizeHelper(node.getLeft(), codeSize + 1);
-    }
+    if (node.isLeaf()) return codeSize * node.getFrequency();
+    else return getCompressedSizeHelper(node.getRight(), codeSize + 1)
+              + getCompressedSizeHelper(node.getLeft(), codeSize + 1);
   }
 
   public void print() {
@@ -92,14 +73,13 @@ class Table {
     printHelper(nodes.head(), "");
   }
 
-  private int numberOfDigits(int number) {
-    return (int)Math.log10(number) + 1;
-  }
+  private int numberOfDigits(int number) {return (int) Math.log10(number) + 1;}
 
   private void printHelper(Node node, String code) {
     if (node.isLeaf()) {
       System.out.printf(" - '%c' [%" + numberOfDigits(highestFrequency) + "d]: %s\n",
-        node.getValue(), node.getFrequency(), code);
+          node.getValue(),
+          node.getFrequency(), code);
     } else {
       printHelper(node.getLeft(), code + "0");
       printHelper(node.getRight(), code + "1");
@@ -107,9 +87,7 @@ class Table {
   }
 }
 
-enum State {
-  Leaf, Parent
-}
+enum State {Leaf, Parent}
 
 // Węzły używane do budowy drzewa kodowań
 class Node {
@@ -119,9 +97,7 @@ class Node {
   private Node left;
   private Node right;
 
-  Node() {
-    super();
-  }
+  Node() {super();}
 
   Node(char value, int frequency) {
     this.value = value;
@@ -129,25 +105,11 @@ class Node {
     this.state = State.Leaf;
   }
 
-  public int getFrequency() {
-    return frequency;
-  }
-
-  public int getValue() {
-    return value;
-  }
-
-  public boolean isLeaf() {
-    return (state == State.Leaf);
-  }
-
-  public Node getLeft() {
-    return left;
-  }
-
-  public Node getRight() {
-    return right;
-  }
+  public int getFrequency() {return frequency;}
+  public int getValue() {return value;}
+  public boolean isLeaf() {return (state == State.Leaf);}
+  public Node getLeft() {return left;}
+  public Node getRight() {return right;}
 
   // Ustawianie węzła jako węzła rozgałęzienia (zawsze pusty nowy węzeł)
   public void setAsParentOf(Node A, Node B) {
@@ -175,7 +137,7 @@ public class HuffmanEncoding {
 
     try (FileReader fileReader = new FileReader(new File(args[0]))) {
       byte character;
-      while ((character = (byte)fileReader.read()) != -1) {
+      while ((character = (byte) fileReader.read()) != -1) {
         originalFileLength++;
         ASCIITable[character]++;
       }
