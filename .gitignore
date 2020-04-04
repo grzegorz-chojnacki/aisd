@@ -5,6 +5,8 @@
 *.zip
 *.pdf
 pmp.c
+.btree
+
 
 # Test data
 *.txt

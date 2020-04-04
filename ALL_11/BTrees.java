@@ -1,154 +1,93 @@
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 
-// Wrapper listy
-class NodeList {
-  private List<Node> nodes;
-
-  NodeList(List<Node> nodes) {this.nodes = nodes;}
-  public int size() {return nodes.size();}
-  public Node popHead() {return nodes.remove(0);}
-  public Node head() {return nodes.get(0);}
-
-  // Wstaw węzeł tak, aby lista pozostała posortowana
-  public void addInOrder(Node newNode) {
-    ListIterator<Node> iterator = nodes.listIterator();
-    while (iterator.hasNext()) {
-      Node node = iterator.next();
-      if (node.getFrequency() > newNode.getFrequency()) {
-        nodes.add(iterator.nextIndex(), newNode);
-        return;
-      }
-    }
-    // Nowy węzeł rozgałęziający ma największą wartość i trafia na koniec listy
-    nodes.add(newNode);
-  }
-}
-
-// Tablica kodowa
-class Table {
-  private NodeList nodes = new NodeList(new ArrayList<Node>());
-  // Używane do ładnego wyświetlania
-  private int highestFrequency = 0;
-
-  Table(int[] ASCIITable) {
-    for (int i = 0; i < ASCIITable.length; i++) {
-      if (ASCIITable[i] > 0) {
-        Node node = new Node((char) i, ASCIITable[i]);
-        nodes.addInOrder(node);
-        highestFrequency = Math.max(highestFrequency, ASCIITable[i]);
-      }
-    }
-    buildTree();
-  }
-
-  private void buildTree() {
-    if (nodes.size() <= 1) return;
-    Node A = nodes.popHead();
-    Node B = nodes.popHead();
-    Node C = new Node();
-    C.setAsParentOf(A, B);
-
-    nodes.addInOrder(C);
-    buildTree();
-  }
-
-  // Przechodzi drzewo i zwraca ilość bitów potrzebnych do zakodowania wiadomości
-  public int getCompressedSize() {
-    return getCompressedSizeHelper(nodes.head(), 0);
-  }
-
-  private int getCompressedSizeHelper(Node node, int codeSize) {
-    if (node.isLeaf()) return codeSize * node.getFrequency();
-    else return getCompressedSizeHelper(node.getRight(), codeSize + 1)
-              + getCompressedSizeHelper(node.getLeft(), codeSize + 1);
-  }
-
-  public void print() {
-    System.out.println("Tabela kodu:");
-    printHelper(nodes.head(), "");
-  }
-
-  private int numberOfDigits(int number) {return (int) Math.log10(number) + 1;}
-
-  private void printHelper(Node node, String code) {
-    if (node.isLeaf()) {
-      System.out.printf(" - '%c' [%" + numberOfDigits(highestFrequency) + "d]: %s\n",
-          node.getValue(),
-          node.getFrequency(), code);
-    } else {
-      printHelper(node.getLeft(), code + "0");
-      printHelper(node.getRight(), code + "1");
-    }
-  }
-}
-
-enum State {Leaf, Parent}
-
-// Węzły używane do budowy drzewa kodowań
 class Node {
-  private int frequency;
-  private char value;
-  private State state;
-  private Node left;
-  private Node right;
+  private boolean isLeaf;
+  private int numberOfKeys;
+  private List<Integer> keys;
+  private List<Integer> children;
 
-  Node() {super();}
-
-  Node(char value, int frequency) {
-    this.value = value;
-    this.frequency = frequency;
-    this.state = State.Leaf;
+  public Node() {
+    this.keys = new ArrayList<Integer>();
+    this.children = new ArrayList<Integer>();
   }
 
-  public int getFrequency() {return frequency;}
-  public int getValue() {return value;}
-  public boolean isLeaf() {return (state == State.Leaf);}
-  public Node getLeft() {return left;}
-  public Node getRight() {return right;}
-
-  // Ustawianie węzła jako węzła rozgałęzienia (zawsze pusty nowy węzeł)
-  public void setAsParentOf(Node A, Node B) {
-    if (A.getFrequency() < B.getFrequency()) {
-      this.left = A;
-      this.right = B;
-    } else {
-      this.left = B;
-      this.right = A;
-    }
-    this.frequency = A.getFrequency() + B.getFrequency();
-    this.state = State.Parent;
+  public Node(boolean isLeaf, int numberOfKeys, List<Integer> keys, List<Integer> children) {
+    this.isLeaf = isLeaf;
+    this.numberOfKeys = numberOfKeys;
+    this.keys = new ArrayList<Integer>(keys);
+    this.children = new ArrayList<Integer>(children);
   }
-}
 
-public class HuffmanEncoding {
-  public static void main(String[] args) {
-    if (args.length != 1) {
-      System.out.println("Podaj ścieżkę do pliku jako argument!");
-      return;
-    }
-
-    int[] ASCIITable = new int[256];
-    int originalFileLength = 0;
-
-    try (FileReader fileReader = new FileReader(new File(args[0]))) {
-      byte character;
-      while ((character = (byte) fileReader.read()) != -1) {
-        originalFileLength++;
-        ASCIITable[character]++;
+  public void load(int index) {
+    try (RandomAccessFile file = new RandomAccessFile(BTrees.defaultFilePath, "rw")) {
+      file.seek(index);
+      this.isLeaf = (file.read() == 1);
+      this.numberOfKeys = file.read();
+      for (int i = 0; i < numberOfKeys; i++) {
+        this.keys.add(file.read());
+      }
+      for (int i = 0; i <= numberOfKeys; i++) {
+        this.children.add(file.read());
       }
     } catch (IOException e) {
-      System.out.println("Błąd pliku");
-      return;
+      System.out.println(e.getStackTrace());
     }
+  }
 
-    Table table = new Table(ASCIITable);
-    table.print();
-    System.out.println("Długość oryginalnego pliku (bity): " + originalFileLength * 8);
-    System.out.println("Długość skompresowanego pliku (bity): " + table.getCompressedSize());
+  public void save(int index) {
+    try (RandomAccessFile file = new RandomAccessFile(BTrees.defaultFilePath, "rw")) {
+      file.seek(index);
+      file.write(isLeaf ? 1 : 0);
+      file.write(numberOfKeys);
+      for (int key : keys) {
+        file.write(key);
+      }
+      for (int child : children) {
+        file.write(child);
+      }
+    } catch (IOException e) {
+      System.out.println(e.getStackTrace());
+    }
+  }
+
+  public String toString() {
+    return ((isLeaf) ? "Leaf Node[" : "Node[") + numberOfKeys + "] -> Keys: " + keys + ", Children: " + children;
+  }
+
+}
+
+class BTree {
+  private Node root;
+
+  public BTree(List<Integer> numbers) {
+    this.root = new Node();
+    add(numbers);
+  }
+
+  public void add(int number) {
+    // TODO: napisać funkcję wstawiającą liczbę do drzewa
+  }
+
+  public void add(List<Integer> numbers) {
+    // TODO: napisać funkcję wstawiającą liczby do drzewa
+  }
+}
+
+public class BTrees {
+
+  public static String defaultFilePath = ".btree";
+
+  public static void main(String[] args) {
+    Node node = new Node(true, 4, List.of(1, 2, 3, 4), List.of(4, 5, 6, 7, 8));
+    System.out.println(node);
+    node.save(0);
+
+    Node anotherNode = new Node();
+    anotherNode.load(0);
+    System.out.println(anotherNode);
+
   }
 }
