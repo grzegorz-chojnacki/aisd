@@ -1,24 +1,36 @@
-import java.util.ArrayList;
 import java.util.List;
+import java.io.File;
 
-class BTree {
-  private Node root;
+public class BTree {
+  private static int rootIndex = 0;
+  private int order;
 
   public BTree(int order) {
-    this.root = new Node();
+    File file = new File(BTrees.defaultFilePath);
+    if (file.exists()) {
+      file.delete();
+    }
+
+    if (order < 2) throw new IllegalArgumentException("Tree order is too small");
+    this.order = order;
+    Node root = new Node(order);
+    root.save(rootIndex);
+  }
+
+  public static void setRootIndex(int index) {
+    rootIndex = index;
   }
 
   public void add(int number) {
-    Node node = root;
-    while (!node.isLeaf()) {
-      List<Integer> keys = node.getKeys();
-      for (int i = 0; i < keys.size(); i++) {
-        if (keys.get(i) > number) {
-          node.load(node.getChildren().get(i));
-          break;
-        }
-      }
-    }
+    Node root = new Node(order);
+    root.load(rootIndex);
+    root.add(number);
+  }
+
+  public void print() {
+    Node root = new Node(order);
+    root.load(rootIndex);
+    root.print();
   }
 
   public void add(List<Integer> numbers) {

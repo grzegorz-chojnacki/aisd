@@ -1,27 +1,13 @@
 import java.util.List;
 
 public class BTrees {
-
-  private static String defaultFilePath = ".btree";
-
-  public static String getDefaultFilePath() {
-    return defaultFilePath;
-  }
-
-  private static int order = 3;
-
-  public static int getOrder() {
-    return order;
-  }
+  public static final String defaultFilePath = ".btree";
 
   public static void main(String[] args) {
-    Node node = new Node(false, List.of(1, 2, 3, 4), List.of(4, 5, 6, 7, 8));
-    System.out.println(node);
-    node.save(0);
-
-    Node anotherNode = new Node();
-    anotherNode.load(0);
-    System.out.println(anotherNode);
-
+    BTree tree = new BTree(3);
+    // tree.add(List.of(62, 2, 88, 6, 83, 81, 49, 71, 2, 69, 74, 90, 23));
+    // tree.add(List.of(5, 55, 555, 5555, 55555));
+    tree.add(List.of(1, 2, 3, 4, 5));
+    tree.print();
   }
 }
