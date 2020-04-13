@@ -19,11 +19,12 @@ class NodeList {
     ListIterator<Node> iterator = nodes.listIterator();
     while (iterator.hasNext()) {
       Node node = iterator.next();
-      if (node.getFrequency() > newNode.getFrequency()) {
-        nodes.add(iterator.nextIndex(), newNode);
+      if (node.getFrequency() >= newNode.getFrequency()) {
+        nodes.add(iterator.nextIndex() - 1, newNode);
         return;
       }
     }
+
     // Nowy węzeł rozgałęziający ma największą wartość i trafia na koniec listy
     nodes.add(newNode);
   }
