@@ -5,6 +5,11 @@ public class BTree {
   private static int rootIndex = 0;
   private int order;
 
+  public void test() {
+    Node root = new Node(order);
+    root.test();
+  }
+
   public BTree(int order) {
     File file = new File(BTrees.defaultFilePath);
     if (file.exists()) {

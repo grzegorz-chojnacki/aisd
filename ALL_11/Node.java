@@ -98,9 +98,7 @@ public class Node {
 
     parent.insertChildIndexAt(newSibling.getIndex(), addedKeyIndex + 1);
     save();
-    // System.out.println(parent);
-    // System.out.println(this);
-    // System.out.println(newSibling);
+
     // Naruszenie warunku b-drzewa u rodzica
     if (parent.getNumberOfKeys() == (order * 2 - 1)) {
       parent.propagadeUp();
@@ -198,8 +196,8 @@ public class Node {
         this.childrenIndices[i] = file.read();
       }
       this.parentIndex = file.read();
-      System.out.print("Load: ");
-      System.out.println(this);
+      // System.out.print("Load " + index + ": ");
+      // System.out.println(this);
     } catch (IOException e) {
       System.out.println(index);
       e.printStackTrace();
@@ -219,9 +217,14 @@ public class Node {
     }
   }
 
+  // TODO: zabić
+  public void test() {
+
+  }
+
   public void save(int index) {
-    System.out.print("Save: ");
-    System.out.println(this);
+    // System.out.print("Save " + index + ": ");
+    // System.out.println(this);
 
     try (RandomAccessFile file = new RandomAccessFile(BTrees.defaultFilePath, "rw")) {
       file.seek(index);
