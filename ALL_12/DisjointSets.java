@@ -5,8 +5,8 @@ class Node {
   private int rank;
   private Node parent;
 
-  // MakeSet(k) - klasa Node pełni rolę zbioru, więc jej konstruktor stanowi
-  // implementacjie funkcji MakeSet
+  // MakeSet(k) - obiekty Node pełnią rolę elementów zbioru, więc konstruktor stanowi
+  // implementacje funkcji MakeSet
   public Node(String key) {
     this.key = key;
     this.rank = 0;
@@ -61,7 +61,6 @@ class Node {
 }
 
 class DisjointSets {
-
   private static void printPaths(List<Node> nodes) {
     for (Node node : nodes) {
       System.out.println("  " + node.getPath());
@@ -86,6 +85,5 @@ class DisjointSets {
 
     System.out.println("Ścieżki do korzenia dla każdego węzła \"/korzeń/węzeł[1]/.../węzeł[n-1]/węzeł[n]\":");
     printPaths(nodes);
-
   }
 }
