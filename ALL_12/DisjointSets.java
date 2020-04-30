@@ -6,7 +6,7 @@ class Node {
   private Node parent;
 
   // MakeSet(k) - klasa Node pełni rolę zbioru, więc jej konstruktor stanowi
-  // implementacji funkcji MakeSet
+  // implementacjie funkcji MakeSet
   public Node(String key) {
     this.key = key;
     this.rank = 0;
@@ -24,12 +24,13 @@ class Node {
   // Union(x, y) - obiektowość pozwala nam wywołać tą metodę z kontekstu x lub y,
   // za pomocą składni: x.union(y), lub y.union(x)
   public void union(Node that) {
+    if (this == that) return;
     if (this.getRank() < that.getRank()) {
-      setParent(that);
+      this.setParent(that);
     } else {
       that.setParent(this);
       if (this.getRank() == that.getRank()) {
-        that.incrementRank();
+        this.incrementRank();
       }
     }
   }
@@ -60,9 +61,11 @@ class Node {
 }
 
 class DisjointSets {
-  // Funkcja upodabniająca interfejs na taki jak w zadaniu
-  public static void union(Node a, Node b) {
-    a.union(b);
+
+  private static void printPaths(List<Node> nodes) {
+    for (Node node : nodes) {
+      System.out.println("  " + node.getPath());
+    }
   }
 
   public static void main(String[] args) {
@@ -73,18 +76,16 @@ class DisjointSets {
       nodes.add(new Node(Integer.toString(i)));
     }
 
-    union(nodes.get(0).findSet(), nodes.get(1).findSet());
-    union(nodes.get(2).findSet(), nodes.get(3).findSet());
-    union(nodes.get(1).findSet(), nodes.get(2).findSet());
-    union(nodes.get(5).findSet(), nodes.get(6).findSet());
-    union(nodes.get(7).findSet(), nodes.get(8).findSet());
-    union(nodes.get(3).findSet(), nodes.get(5).findSet());
-    union(nodes.get(0).findSet(), nodes.get(7).findSet());
+    nodes.get(0).findSet().union(nodes.get(1).findSet());
+    nodes.get(2).findSet().union(nodes.get(3).findSet());
+    nodes.get(1).findSet().union(nodes.get(2).findSet());
+    nodes.get(5).findSet().union(nodes.get(6).findSet());
+    nodes.get(7).findSet().union(nodes.get(8).findSet());
+    nodes.get(3).findSet().union(nodes.get(5).findSet());
+    nodes.get(0).findSet().union(nodes.get(7).findSet());
 
     System.out.println("Ścieżki do korzenia dla każdego węzła \"/korzeń/węzeł[1]/.../węzeł[n-1]/węzeł[n]\":");
-    for (Node node : nodes) {
-      System.out.println("  " + node.getPath());
-    }
+    printPaths(nodes);
 
   }
 }
