@@ -32,6 +32,11 @@ Array *load(FILE *file) {
   return array;
 }
 
+// Funkcja porównująca znaki, definicja maski ('?') w jednym miejscu
+bool isMatching(char predicateChar, char textChar) {
+  return predicateChar == textChar || predicateChar == '?';
+}
+
 // Funkcja generująca tablice indeksów prefiksów, domyślnie wyzerowana
 int *prefixFunction(Array *predicate) {
   int *prefixTable = (int *)calloc(predicate->length, sizeof(int));
@@ -42,7 +47,7 @@ int *prefixFunction(Array *predicate) {
     while ((k > 0) && (predicate->data[k] != predicate->data[q - 1])) {
       k = prefixTable[k - 1];
     }
-    if (predicate->data[k] == predicate->data[q - 1]) {
+    if (isMatching(predicate->data[k], predicate->data[q - 1])) {
       k++;
     }
     prefixTable[q - 1] = k;
@@ -57,10 +62,10 @@ int KMP(Array *text, Array *predicate) {
   int *prefixTable = prefixFunction(predicate);
   int q = 0;
   for (int i = 1; i <= text->length; i++) {
-    while ((q > 0) && (predicate->data[q] != text->data[i - 1])) {
+    while ((q > 0) && !isMatching(predicate->data[q], text->data[i - 1])) {
       q = prefixTable[q - 1];
     }
-    if (predicate->data[q] == text->data[i - 1]) {
+    if (isMatching(predicate->data[q], text->data[i - 1])) {
       q++;
     }
     if (q == predicate->length) {
@@ -104,8 +109,10 @@ int main(int argc, char const *argv[]) {
   Array *text = load(fileT);
 
   int matchesFound = KMP(text, predicate);
-  if (matchesFound == 0) printf("Nie znaleziono żadnych dopasowań\n");
-  else printf("---------\nZnaleziono łącznie %d dopasowań\n", matchesFound);
+  if (matchesFound == 0)
+    printf("Nie znaleziono żadnych dopasowań\n");
+  else
+    printf("---------\nZnaleziono łącznie %d dopasowań\n", matchesFound);
 
   return 0;
 }
