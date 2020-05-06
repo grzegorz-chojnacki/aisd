@@ -32,9 +32,17 @@ Array *load(FILE *file) {
   return array;
 }
 
+int getPatternLengthWithoutNewLines(Array *pattern) {
+  int length = pattern->length;
+  for (int i = 0; i < pattern->length; i++) {
+    if (pattern->data[i] == '\n') length--;
+  }
+  return length;
+}
+
 // Funkcja porównująca znaki, definicja maski ('?') w jednym miejscu
 bool isMatching(char patternChar, char textChar) {
-  return patternChar == textChar || patternChar == '?';
+  return patternChar == textChar;
 }
 
 // Funkcja generująca tablice indeksów prefiksów, domyślnie wyzerowana
@@ -60,8 +68,19 @@ int *prefixFunction(Array *pattern) {
 int KMP(Array *text, Array *pattern) {
   int matchesFound = 0;
   int *prefixTable = prefixFunction(pattern);
+  int lineNumber = 1;
+  int characterNumber = 1;
+  int patternLengthWithoutNewLines = getPatternLengthWithoutNewLines(pattern);
   int q = 0;
   for (int i = 1; i <= text->length; i++) {
+    // Pomin znaki nowego wiersza
+    while (pattern->data[q] == '\n') q++;
+    while (text->data[i - 1] == '\n') {
+      i++;
+      lineNumber++;
+      characterNumber = 1;
+    }
+
     while ((q > 0) && !isMatching(pattern->data[q], text->data[i - 1])) {
       q = prefixTable[q - 1];
     }
@@ -69,16 +88,17 @@ int KMP(Array *text, Array *pattern) {
       q++;
     }
     if (q == pattern->length) {
-      // printMatch(text, pattern, (i - pattern->length));
       if (matchesFound == 0) {
         printf(
             "Znaleziono dopasowania na następujących pozycjach:\n"
-            "(Pierwszy znak jest oznaczony indeksem 1)\n");
+            "(Numer wiersza : znak w wierszu)\n");
       }
       matchesFound++;
-      printf("- %d\n", i - pattern->length + 1);
+      printf("- %d : %d\n", lineNumber,
+             characterNumber - patternLengthWithoutNewLines + 1);
       q = prefixTable[q - 1];
     }
+    characterNumber++;
   }
   return matchesFound;
 }
