@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #include <string.h>
 
@@ -12,6 +13,11 @@ typedef struct Array {
   int length;
 } Array;
 
+void ThrowMemoryError() {
+  printf("Wystąpił problem z alokacją pamięci\n");
+  exit(4);
+}
+
 // Wczytywanie pliku do pamięci, w celu zmniejszenia czasu dostępu do znaków
 Array *load(FILE *file) {
   fseek(file, 0, SEEK_END);
@@ -20,10 +26,7 @@ Array *load(FILE *file) {
   Array *array = (Array *)calloc(1, sizeof(Array));
   char *data = (char *)calloc(fileLenght + 1, sizeof(char));
 
-  if (array == NULL || data == NULL) {
-    printf("Wystąpił problem z alokacją pamięci\n");
-    exit(4);
-  }
+  if (array == NULL || data == NULL) ThrowMemoryError();
 
   int i = 0;
   for (char c = fgetc(file); c != EOF; c = fgetc(file)) {
@@ -35,23 +38,61 @@ Array *load(FILE *file) {
   return array;
 }
 
+// void printMatch(Array *text, Array *predicate, int position) {
+//   char *buffer = (char *)calloc(predicate->length + 1, sizeof(char));
+//   if (buffer == NULL) ThrowMemoryError();
+
+//   for (int i = position, j = 0; i < predicate->length; i++) {
+//     buffer[j++] = text->data[i];
+//   }
+//   printf("- %s\n", buffer);
+//   free(buffer);
+// }
+
 // Funkcja generująca tablice indeksów prefiksów, domyślnie wyzerowana
 int *prefixFunction(Array *predicate) {
-  int *indices = (int *)calloc(predicate->length, sizeof(int));
+  int *prefixTable = (int *)calloc(predicate->length, sizeof(int));
+  if (prefixTable == NULL) ThrowMemoryError();
 
   int k = 0;
   for (int q = 2; q <= predicate->length; q++) {
     while ((k > 0) && (predicate->data[k] != predicate->data[q - 1])) {
-      k = indices[k - 1];
+      k = prefixTable[k - 1];
     }
-    if (predicate->data[k] == predicate->data[q - 1]) k++;
-    indices[q - 1] = k;
+    if (predicate->data[k] == predicate->data[q - 1]) {
+      k++;
+    }
+    prefixTable[q - 1] = k;
   }
 
-  return indices;
+  return prefixTable;
 }
 
-void KMP(Array *text, Array *predicate) {}
+// Wyszukiwanie wzorca w tekście przy pomocy algorytmu Knutha-Morrisa-Pratta
+int KMP(Array *text, Array *predicate) {
+  int matchesFound = 0;
+  int *prefixTable = prefixFunction(predicate);
+  int q = 0;
+  for (int i = 1; i <= text->length; i++) {
+    while ((q > 0) && (predicate->data[q] != text->data[i - 1])) {
+      q = prefixTable[q - 1];
+    }
+    if (predicate->data[q] == text->data[i - 1]) {
+      q++;
+    }
+    if (q == predicate->length) {
+      // printMatch(text, predicate, (i - predicate->length));
+      if (matchesFound == 0) {
+        printf("Znaleziono dopasowania na następujących pozycjach:\n"
+               "(Pierwszy znak jest oznaczony indeksem 1)\n");
+      }
+      matchesFound++;
+      printf("- %d\n", i - predicate->length + 1);
+      q = prefixTable[q - 1];
+    }
+  }
+  return matchesFound;
+}
 
 int main(int argc, char const *argv[]) {
   if (argc != 3) {
@@ -75,20 +116,26 @@ int main(int argc, char const *argv[]) {
   }
 
   // Wczytywanie plików
-  // Array *predicate = load(fileP);
-  // Array *text = load(fileT);
-  char test[] = {'b', 'b', 'b', 'a', 'b', 'b', 0};
-  Array *predicate = (Array *)calloc(1, sizeof(Array));
-  predicate->data = test;
-  predicate->length = strlen(test);
+  Array *predicate = load(fileP);
+  Array *text = load(fileT);
+  // printf("%s\n%s\n", predicate->data, text->data);
+  // char test[] = {'b', 'b', 'b', 'a', 'b', 'b', 0};
+  // Array *predicate = (Array *)calloc(1, sizeof(Array));
+  // predicate->data = test;
+  // predicate->length = strlen(test);
 
-  int *indices = prefixFunction(predicate);
-  printf("%s\n", predicate->data);
-  for (int i = 0; i < predicate->length; i++) {
-    printf("%i", indices[i]);
+  // int *indices = prefixFunction(predicate);
+  // printf("%s\n", predicate->data);
+  // for (int i = 0; i < predicate->length; i++) {
+  //   printf("%i", indices[i]);
+  // }
+  // printf("\n");
+
+  int matchesFound = KMP(text, predicate);
+  if (matchesFound == 0) {
+    printf("Nie znaleziono żadnych dopasowań\n");
+  } else {
+    printf("---------\nZnaleziono łącznie %d dopasowań\n", matchesFound);
   }
-  printf("\n");
-
-  // KMP(text, predicate);
   return 0;
 }
