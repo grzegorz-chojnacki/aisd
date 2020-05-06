@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <string.h>
+
 // Zmodyfikuj algorytm Knutha-Morrisa-Pratta tak, aby wyszukiwał w tekście T
 // dany wzorzec P przy założeniu, że każdy znak zapytania ’?’ w tekście T może
 // odpowiadać dowolnemu znakowi, a następnie zaimplementuj tę modyfikację.
@@ -33,6 +35,24 @@ Array *load(FILE *file) {
   return array;
 }
 
+// Funkcja generująca tablice indeksów prefiksów, domyślnie wyzerowana
+int *prefixFunction(Array *predicate) {
+  int *indices = (int *)calloc(predicate->length, sizeof(int));
+
+  int k = 0;
+  for (int q = 2; q <= predicate->length; q++) {
+    while ((k > 0) && (predicate->data[k] != predicate->data[q - 1])) {
+      k = indices[k - 1];
+    }
+    if (predicate->data[k] == predicate->data[q - 1]) k++;
+    indices[q - 1] = k;
+  }
+
+  return indices;
+}
+
+void KMP(Array *text, Array *predicate) {}
+
 int main(int argc, char const *argv[]) {
   if (argc != 3) {
     printf(
@@ -55,8 +75,20 @@ int main(int argc, char const *argv[]) {
   }
 
   // Wczytywanie plików
-  Array *predicate = load(fileP);
-  Array *text = load(fileT);
+  // Array *predicate = load(fileP);
+  // Array *text = load(fileT);
+  char test[] = {'b', 'b', 'b', 'a', 'b', 'b', 0};
+  Array *predicate = (Array *)calloc(1, sizeof(Array));
+  predicate->data = test;
+  predicate->length = strlen(test);
+
+  int *indices = prefixFunction(predicate);
+  printf("%s\n", predicate->data);
+  for (int i = 0; i < predicate->length; i++) {
+    printf("%i", indices[i]);
+  }
+  printf("\n");
+
   // KMP(text, predicate);
   return 0;
 }
