@@ -33,21 +33,21 @@ Array *load(FILE *file) {
 }
 
 // Funkcja porównująca znaki, definicja maski ('?') w jednym miejscu
-bool isMatching(char predicateChar, char textChar) {
-  return predicateChar == textChar || predicateChar == '?';
+bool isMatching(char patternChar, char textChar) {
+  return patternChar == textChar || patternChar == '?';
 }
 
 // Funkcja generująca tablice indeksów prefiksów, domyślnie wyzerowana
-int *prefixFunction(Array *predicate) {
-  int *prefixTable = (int *)calloc(predicate->length, sizeof(int));
+int *prefixFunction(Array *pattern) {
+  int *prefixTable = (int *)calloc(pattern->length, sizeof(int));
   if (prefixTable == NULL) ThrowMemoryError();
 
   int k = 0;
-  for (int q = 2; q <= predicate->length; q++) {
-    while ((k > 0) && (predicate->data[k] != predicate->data[q - 1])) {
+  for (int q = 2; q <= pattern->length; q++) {
+    while ((k > 0) && (pattern->data[k] != pattern->data[q - 1])) {
       k = prefixTable[k - 1];
     }
-    if (isMatching(predicate->data[k], predicate->data[q - 1])) {
+    if (isMatching(pattern->data[k], pattern->data[q - 1])) {
       k++;
     }
     prefixTable[q - 1] = k;
@@ -57,26 +57,26 @@ int *prefixFunction(Array *predicate) {
 }
 
 // Wyszukiwanie wzorca w tekście przy pomocy algorytmu Knutha-Morrisa-Pratta
-int KMP(Array *text, Array *predicate) {
+int KMP(Array *text, Array *pattern) {
   int matchesFound = 0;
-  int *prefixTable = prefixFunction(predicate);
+  int *prefixTable = prefixFunction(pattern);
   int q = 0;
   for (int i = 1; i <= text->length; i++) {
-    while ((q > 0) && !isMatching(predicate->data[q], text->data[i - 1])) {
+    while ((q > 0) && !isMatching(pattern->data[q], text->data[i - 1])) {
       q = prefixTable[q - 1];
     }
-    if (isMatching(predicate->data[q], text->data[i - 1])) {
+    if (isMatching(pattern->data[q], text->data[i - 1])) {
       q++;
     }
-    if (q == predicate->length) {
-      // printMatch(text, predicate, (i - predicate->length));
+    if (q == pattern->length) {
+      // printMatch(text, pattern, (i - pattern->length));
       if (matchesFound == 0) {
         printf(
             "Znaleziono dopasowania na następujących pozycjach:\n"
             "(Pierwszy znak jest oznaczony indeksem 1)\n");
       }
       matchesFound++;
-      printf("- %d\n", i - predicate->length + 1);
+      printf("- %d\n", i - pattern->length + 1);
       q = prefixTable[q - 1];
     }
   }
@@ -96,7 +96,7 @@ int main(int argc, char const *argv[]) {
   FILE *fileT = fopen(argv[2], "r");
 
   if (fileP == NULL) {
-    printf("Wystąpił błąd podczas otwierania pliku z predykatem\n");
+    printf("Wystąpił błąd podczas otwierania pliku z wzorcem\n");
     return 2;
   }
   if (fileT == NULL) {
@@ -105,10 +105,10 @@ int main(int argc, char const *argv[]) {
   }
 
   // Wczytywanie plików
-  Array *predicate = load(fileP);
+  Array *pattern = load(fileP);
   Array *text = load(fileT);
 
-  int matchesFound = KMP(text, predicate);
+  int matchesFound = KMP(text, pattern);
   if (matchesFound == 0)
     printf("Nie znaleziono żadnych dopasowań\n");
   else
