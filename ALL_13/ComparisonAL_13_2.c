@@ -56,13 +56,10 @@ int patternOffset(Array *text, Array *pattern, int textIndex) {
   int offset = textIndex - 1;
   int patternIndex = pattern->length - 1;
   while (patternIndex >= 0) {
-    // printf("%c | %c\n",text->data[offset] == '\n' ? '_' : text->data[offset],
-    //  pattern->data[patternIndex]);
     if (text->data[offset] == pattern->data[patternIndex])
       patternIndex--;
     offset--;
   }
-  // printf("%d\n", textIndex - offset - 1);
   return textIndex - offset - 1;
 }
 
@@ -85,6 +82,7 @@ int *prefixFunction(Array *pattern) {
 }
 
 // Wyszukiwanie wzorca w tekście przy pomocy algorytmu Knutha-Morrisa-Pratta
+// Zwraca tablice pozycji na których dopasowano wzorzec
 int *KMP(Array *text, Array *pattern) {
   int *prefixTable = prefixFunction(pattern);
   int *listOfMatches = (int *)calloc(text->length, sizeof(int));
@@ -94,7 +92,7 @@ int *KMP(Array *text, Array *pattern) {
 
   int q = 0;
   for (int i = 1; i <= text->length; i++) {
-    // Pomin znaki nowego wiersza przy dopasowywaniu
+    // Pomiń znaki nowego wiersza przy dopasowywaniu
     while (text->data[i - 1] == '\n') {
       i++;
     }
@@ -107,9 +105,46 @@ int *KMP(Array *text, Array *pattern) {
     if (q == pattern->length) {
       // i jest indeksem końca znalezionego wzorca w tekście
       // Należy odjąć od niego tyle znaków ile występuje we wzorcu, ale
-      // z dodatkowym uwzględnieniem znaków nowych linnii
+      // z dodatkowym uwzględnieniem znaków nowych linii
       listOfMatches[matchIndex++] = i - patternOffset(text, pattern, i) + 1;
       q = prefixTable[q - 1];
+    }
+  }
+  return listOfMatches;
+}
+
+bool matches(Array *text, int index, Array *pattern) {
+  for (int i = 0; i < pattern->length; i++)
+    if (pattern->data[i] != text->data[index + i]) return false;
+  return true;
+}
+
+// Wyszukiwanie wzorca w tekście przy pomocy algorytmu Rabina-Karpa
+// Zwraca tablice pozycji na których dopasowano wzorzec
+int *RB(Array *text, Array *pattern, int alphabetSize, int prime) {
+  int *listOfMatches = (int *)calloc(text->length, sizeof(int));
+  int matchIndex = 0;
+  if (listOfMatches == NULL) ThrowMemoryError();
+
+  int h = 1;
+  for (int i = 0; i < pattern->length; i++) h = (h * alphabetSize) % prime;
+
+  int p = 0;
+  int t = 0;
+  for (int i = 0; i < pattern->length; i++) {
+    p = (alphabetSize * p + pattern->data[i]) % prime;
+    t = (alphabetSize * t + text->data[i])    % prime;
+  }
+  for (int s = 0; s < (text->length - pattern->length); s++) {
+    if (p == t) {
+      // Porównywanie tekstu ze wzorcem
+      if (matches(text, s, pattern))
+        listOfMatches[matchIndex++] = s;
+    }
+    if (s < (text->length - pattern->length)) {
+      int t1 = (text->data[s] * h) % prime;
+      if (t < t1) t = t + prime;
+      t = (alphabetSize * (t - t1) + text->data[s + pattern->length]) % prime;
     }
   }
   return listOfMatches;
@@ -164,13 +199,14 @@ int main(int argc, char const *argv[]) {
   // Wczytywanie plików
   Array *pattern = load(fileP, withoutNewLines);
   Array *text = load(fileT, withNewLines);
-  // printf("P:\n%s\n\n", pattern->data);
-  // printf("T:\n%s\n\n", text->data);
 
-  int *listOfMatches = KMP(text, pattern);
-  // for (int i = 0; listOfMatches[i] != 0; i++) {
-  //   printf("- %d\n", listOfMatches[i]);
-  // }
-  printResults(text, listOfMatches);
+  // int *listOfMatches = KMP(text, pattern);
+  // printResults(text, listOfMatches);
+  int *listOfMatches = RB(text, pattern, 128, 27077);
+  for (int i = 0; listOfMatches[i] != 0; i++) {
+    printf("- %d\n", listOfMatches[i]);
+  }
+  // printResults(text, listOfMatches);
+
   return 0;
 }
