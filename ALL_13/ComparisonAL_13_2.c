@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define prime 27077
-#define base 128
+#define PRIME 27077
+#define BASE 128
 
 typedef struct Array {
   char *data;
@@ -116,18 +116,28 @@ int *KMP(Array *text, Array *pattern) {
   return listOfMatches;
 }
 
-bool matches(Array *text, int index, Array *pattern) {
-  for (int i = 0; i < pattern->length; i++)
-    if (pattern->data[i] != text->data[index + i]) return false;
+// Dopasowanie wzorca do tekstu (od danego indeksu),
+// z pomijaniem znaków nowego wiersza
+bool isMatching(Array *text, int index, Array *pattern) {
+  int charactersChecked = 0;
+  for (int i = 0; charactersChecked < pattern->length; i++) {
+    if (text->data[index + i] == '\n') continue;
+    if (pattern->data[charactersChecked] != text->data[index + i]) return false;
+    else charactersChecked++;
+  }
   return true;
 }
 
-int hash(Array *pattern) {
-   int h = 0;
-   for (int i = 0; i < pattern->length; i++) {
-      h = (h * base + pattern->data[i]) % prime;
-   }
-   return h;
+// Funkcja hashująca z pomijaniem hashowania znaków nowego wiersza
+int hash(char *string, int length) {
+  int h = 0;
+  int charactersChecked = 0;
+  for (int i = 0; charactersChecked < length; i++) {
+    if (string[i] == '\n') continue;
+    else charactersChecked++;
+    h = (h * BASE + string[i]) % PRIME;
+  }
+  return h;
 }
 
 // Wyszukiwanie wzorca w tekście przy pomocy algorytmu Rabina-Karpa
@@ -137,24 +147,17 @@ int *RB(Array *text, Array *pattern) {
   int matchIndex = 0;
   if (listOfMatches == NULL) ThrowMemoryError();
 
-  int h1 = hash(pattern);
-  int h2 = 0;
-  int power = 1;
-  for (int i = 0; i < pattern->length; i++) {
-     power = (power * base) % prime;
+  int patternHash = hash(pattern->data, pattern->length);
+  int textHash;
+  for (int i = 0; i < (text->length - pattern->length); i++) {
+    if (text->data[i] == '\n') continue;
+    int textHash = hash(text->data + i, pattern->length);
+    // Leniwe wywoływanie funkcji isMatching dzięki operatorowi '&&'
+    if (textHash == patternHash && isMatching(text, i, pattern)) {
+      listOfMatches[matchIndex++] = i + 1;
+    }
   }
 
-  for (int i = 0; i < text->length; i++) {
-     h2 = (h2 * base + text->data[i]) % prime;
-     if (i >= pattern->length) {
-        h2 = h2 - (power * text->data[i - pattern->length] % prime);
-        if (h2 < 0) {
-           h2 = h2 + prime;
-        }
-     }
-     if (i >= pattern->length - 1 && h1 == h2)
-        listOfMatches[matchIndex++] = i - pattern->length + 2;
-  }
   return listOfMatches;
 }
 
@@ -211,10 +214,10 @@ int main(int argc, char const *argv[]) {
   // int *listOfMatches = KMP(text, pattern);
   // printResults(text, listOfMatches);
   int *listOfMatches = RB(text, pattern);
-  for (int i = 0; listOfMatches[i] != 0; i++) {
-    printf("- %d\n", listOfMatches[i]);
-  }
-  // printResults(text, listOfMatches);
+  // for (int i = 0; listOfMatches[i] != 0; i++) {
+  //   printf("- %d\n", listOfMatches[i]);
+  // }
+  printResults(text, listOfMatches);
 
   return 0;
 }
