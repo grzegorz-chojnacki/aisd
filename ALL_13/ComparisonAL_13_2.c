@@ -1,21 +1,25 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
+// Stałe wartości dla funkcji hashującej
 #define PRIME 27077
 #define BASE 128
 
+// Struktura upraszczająca działanie na tablicach znaków
 typedef struct Array {
   char *data;
   int length;
 } Array;
 
+// Obsługa wyjątku błędu podczas alokowania pamięci funkcją calloc
 void ThrowMemoryError() {
   printf("Wystąpił problem z alokacją pamięci\n");
   exit(4);
 }
 
-// Funkcja obsługująca wczytywanie pliku w całości do tablicy
+// Funkcja obsługująca wczytywanie pliku w całości do tablicy.
 // Zwraca ilość wczytanych znaków
 int withNewLines(FILE *file, char *data) {
   int i = 0;
@@ -25,7 +29,7 @@ int withNewLines(FILE *file, char *data) {
   return i;
 }
 
-// Funkcja obsługująca wczytywanie pliku do tablicy, bez znaków nowej linii
+// Funkcja obsługująca wczytywanie pliku do tablicy, bez znaków nowej linii.
 // Zwraca ilość wczytanych znaków
 int withoutNewLines(FILE *file, char *data) {
   int i = 0;
@@ -46,6 +50,7 @@ Array *load(FILE *file, int newLinePolicy(FILE *, char *)) {
 
   if (array == NULL || data == NULL) ThrowMemoryError();
 
+  // Wczytanie znaków do data
   int patternLenght = newLinePolicy(file, data);
 
   array->data = data;
@@ -130,14 +135,14 @@ bool isMatching(Array *text, int index, Array *pattern) {
 
 // Funkcja hashująca z pomijaniem hashowania znaków nowego wiersza
 int hash(char *string, int length) {
-  int h = 0;
+  int code = 0;
   int charactersChecked = 0;
   for (int i = 0; charactersChecked < length; i++) {
     if (string[i] == '\n') continue;
     else charactersChecked++;
-    h = (h * BASE + string[i]) % PRIME;
+    code = (code * BASE + string[i]) % PRIME;
   }
-  return h;
+  return code;
 }
 
 // Wyszukiwanie wzorca w tekście przy pomocy algorytmu Rabina-Karpa
@@ -151,7 +156,9 @@ int *RB(Array *text, Array *pattern) {
   int textHash;
   for (int i = 0; i < (text->length - pattern->length); i++) {
     if (text->data[i] == '\n') continue;
-    int textHash = hash(text->data + i, pattern->length);
+    // Funkcja hashująca dostaje wskaźnik na tablice znaków przesunięty o i,
+    // dzięki czemu może pracować na danym fragmencie
+    int textHash = hash(text->data + i, pattern->length / pattern->length);
     // Leniwe wywoływanie funkcji isMatching dzięki operatorowi '&&'
     if (textHash == patternHash && isMatching(text, i, pattern)) {
       listOfMatches[matchIndex++] = i + 1;
@@ -161,9 +168,25 @@ int *RB(Array *text, Array *pattern) {
   return listOfMatches;
 }
 
+// Wyszukiwanie wzorca w tekście przy pomocy algorytmu naiwnego
+// Zwraca tablice pozycji na których dopasowano wzorzec
+int *N(Array *text, Array *pattern) {
+  int *listOfMatches = (int *)calloc(text->length, sizeof(int));
+  int matchIndex = 0;
+  if (listOfMatches == NULL) ThrowMemoryError();
+
+  for (int i = 0; i < (text->length - pattern->length); i++) {
+    if (text->data[i] == '\n') continue;
+    if (isMatching(text, i, pattern)) {
+      listOfMatches[matchIndex++] = i + 1;
+    }
+  }
+  return listOfMatches;
+}
+
 void printResults(Array *text, int *listOfMatches) {
   if (listOfMatches[0] == 0) {
-    printf("Nie znaleziono żadnych dopasowań\n");
+    printf("Nie znaleziono żadnych dopasowań\n\n");
     return;
   }
   printf("Znaleziono dopasowania na następujących pozycjach:\n"
@@ -183,7 +206,16 @@ void printResults(Array *text, int *listOfMatches) {
     }
     characterInLine++;
   }
-  printf("---------\nZnaleziono łącznie %d dopasowań\n", matchIndex);
+  printf("------------------\n"
+         "Znaleziono łącznie %d dopasowań\n", matchIndex);
+}
+
+double test(Array *text, Array *pattern, int *searchFunction(Array*, Array*)) {
+  clock_t start, end;
+  start = clock();
+  searchFunction(text, pattern);
+  end = clock();
+  return ((double) (end - start) / CLOCKS_PER_SEC);
 }
 
 int main(int argc, char const *argv[]) {
@@ -209,15 +241,21 @@ int main(int argc, char const *argv[]) {
 
   // Wczytywanie plików
   Array *pattern = load(fileP, withoutNewLines);
+  fclose(fileP);
   Array *text = load(fileT, withNewLines);
+  fclose(fileT);
 
-  // int *listOfMatches = KMP(text, pattern);
-  // printResults(text, listOfMatches);
-  int *listOfMatches = RB(text, pattern);
-  // for (int i = 0; listOfMatches[i] != 0; i++) {
-  //   printf("- %d\n", listOfMatches[i]);
-  // }
+  printf("### Test poprawności działania algorytmu Knutha-Morrisa-Pratta ###\n");
+  int *listOfMatches = KMP(text, pattern);
   printResults(text, listOfMatches);
 
+  printf("\n### Test pomiaru czasu działania algorytmów ###\n");
+  printf("1) Test algorytmu Knutha-Morrisa-Pratta:\n");
+  printf(" ~ %fs\n", test(text, pattern, KMP));
+  printf("2) Test algorytmu Rabina-Karpa:\n");
+  printf(" ~ %fs\n", test(text, pattern, RB));
+  printf("3) Test algorytmu naiwnego:\n");
+  printf(" ~ %fs\n", test(text, pattern, N));
+  printf("\n");
   return 0;
 }
