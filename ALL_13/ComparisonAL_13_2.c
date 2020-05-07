@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define prime 27077
+#define base 128
+
 typedef struct Array {
   char *data;
   int length;
@@ -119,33 +122,38 @@ bool matches(Array *text, int index, Array *pattern) {
   return true;
 }
 
+int hash(Array *pattern) {
+   int h = 0;
+   for (int i = 0; i < pattern->length; i++) {
+      h = (h * base + pattern->data[i]) % prime;
+   }
+   return h;
+}
+
 // Wyszukiwanie wzorca w tekście przy pomocy algorytmu Rabina-Karpa
 // Zwraca tablice pozycji na których dopasowano wzorzec
-int *RB(Array *text, Array *pattern, int alphabetSize, int prime) {
+int *RB(Array *text, Array *pattern) {
   int *listOfMatches = (int *)calloc(text->length, sizeof(int));
   int matchIndex = 0;
   if (listOfMatches == NULL) ThrowMemoryError();
 
-  int h = 1;
-  for (int i = 0; i < pattern->length; i++) h = (h * alphabetSize) % prime;
-
-  int p = 0;
-  int t = 0;
+  int h1 = hash(pattern);
+  int h2 = 0;
+  int power = 1;
   for (int i = 0; i < pattern->length; i++) {
-    p = (alphabetSize * p + pattern->data[i]) % prime;
-    t = (alphabetSize * t + text->data[i])    % prime;
+     power = (power * base) % prime;
   }
-  for (int s = 0; s < (text->length - pattern->length); s++) {
-    if (p == t) {
-      // Porównywanie tekstu ze wzorcem
-      if (matches(text, s, pattern))
-        listOfMatches[matchIndex++] = s;
-    }
-    if (s < (text->length - pattern->length)) {
-      int t1 = (text->data[s] * h) % prime;
-      if (t < t1) t = t + prime;
-      t = (alphabetSize * (t - t1) + text->data[s + pattern->length]) % prime;
-    }
+
+  for (int i = 0; i < text->length; i++) {
+     h2 = (h2 * base + text->data[i]) % prime;
+     if (i >= pattern->length) {
+        h2 = h2 - (power * text->data[i - pattern->length] % prime);
+        if (h2 < 0) {
+           h2 = h2 + prime;
+        }
+     }
+     if (i >= pattern->length - 1 && h1 == h2)
+        listOfMatches[matchIndex++] = i - pattern->length + 2;
   }
   return listOfMatches;
 }
@@ -202,7 +210,7 @@ int main(int argc, char const *argv[]) {
 
   // int *listOfMatches = KMP(text, pattern);
   // printResults(text, listOfMatches);
-  int *listOfMatches = RB(text, pattern, 128, 27077);
+  int *listOfMatches = RB(text, pattern);
   for (int i = 0; listOfMatches[i] != 0; i++) {
     printf("- %d\n", listOfMatches[i]);
   }
