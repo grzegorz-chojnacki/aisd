@@ -164,20 +164,26 @@ int *RB(Array *text, Array *pattern) {
 
   int patternHash = hash(pattern);
   int textHash = 0;
-  int j = 0;
+  // Licznik pominiętych znaków nowej linii
   int skippedCharacters = 0;
+  // j - iterator który zawsze wskazuje na pierwszą literę, która jest jeszcze
+  // w hashu (litera przed początekiem sprawdzanego wycinka tekstu)
+  int j = 0;
+  // Pominięcie ewentualnych pierwszych znaków nowej linii
   while (text->data[j] == '\n') {j++;}
   for (int i = 0; i < text->length; i++) {
     if (text->data[i] == '\n') {
       skippedCharacters++;
       continue;
     }
+    // Hashowanie typu "Rolling hash"
     textHash = hashAdd(textHash, text->data[i]);
     if (i - skippedCharacters >= pattern->length) {
       textHash = hashRemove(textHash, power, text->data[j++]);
       while (text->data[j] == '\n') {j++;}
     }
-    if (textHash == patternHash) {
+    // Leniwe sprawdzanie dokładnego dopasowania
+    if (textHash == patternHash && isMatching(text, j, pattern)) {
       listOfMatches[matchIndex++] = j + 1;
     }
 
@@ -224,7 +230,7 @@ void printResults(Array *text, int *listOfMatches) {
     characterInLine++;
   }
   printf("------------------\n"
-         "Znaleziono łącznie %d dopasowań\n", matchIndex);
+         "Znaleziono łącznie %d dopasowań\n\n", matchIndex);
 }
 
 double test(Array *text, Array *pattern, int *searchFunction(Array*, Array*)) {
@@ -270,14 +276,7 @@ int main(int argc, char const *argv[]) {
   listOfMatches = N(text, pattern);
   printResults(text, listOfMatches);
 
-  // printf("\n\n");
-  // listOfMatches = RB(text, pattern);
-  // printResults(text, listOfMatches);
-  // for (int i = 0; i < 10; i++) {
-  //   printf("%d\n", listOfMatches[i]);
-  // }
-  return 0;
-  printf("\n### Test pomiaru czasu działania algorytmów ###\n");
+  printf("### Test pomiaru czasu działania algorytmów ###\n");
   printf("1) Test algorytmu Knutha-Morrisa-Pratta:\n");
   printf(" ~ %fs\n", test(text, pattern, KMP));
   printf("2) Test algorytmu Rabina-Karpa:\n");
