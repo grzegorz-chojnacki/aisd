@@ -133,15 +133,21 @@ bool isMatching(Array *text, int index, Array *pattern) {
   return true;
 }
 
-// Funkcja hashująca z pomijaniem hashowania znaków nowego wiersza
-int hash(char *string, int length) {
+int hashAdd(int oldHash, char newCharacter) {
+  return (oldHash * BASE + newCharacter) % PRIME;
+}
+
+int hashRemove(int oldHash, int power, char oldCharacter) {
+  oldHash = (oldHash - power * oldCharacter) % PRIME;
+  if (oldHash < 0) return oldHash + PRIME;
+  else return oldHash;
+}
+
+// Funkcja hashująca (użyta tylko do wzorca)
+int hash(Array *array) {
   int code = 0;
-  int charactersChecked = 0;
-  for (int i = 0; charactersChecked < length; i++) {
-    if (string[i] == '\n') continue;
-    else charactersChecked++;
-    code = (code * BASE + string[i]) % PRIME;
-  }
+  for (int i = 0; i < array->length; i++)
+    code = hashAdd(code, array->data[i]);
   return code;
 }
 
@@ -152,19 +158,30 @@ int *RB(Array *text, Array *pattern) {
   int matchIndex = 0;
   if (listOfMatches == NULL) ThrowMemoryError();
 
-  int patternHash = hash(pattern->data, pattern->length);
-  int textHash;
-  for (int i = 0; i < (text->length - pattern->length); i++) {
-    if (text->data[i] == '\n') continue;
-    // Funkcja hashująca dostaje wskaźnik na tablice znaków przesunięty o i,
-    // dzięki czemu może pracować na danym fragmencie
-    int textHash = hash(text->data + i, pattern->length / pattern->length);
-    // Leniwe wywoływanie funkcji isMatching dzięki operatorowi '&&'
-    if (textHash == patternHash && isMatching(text, i, pattern)) {
-      listOfMatches[matchIndex++] = i + 1;
-    }
-  }
+  int power = 1;
+  for (int i = 0; i < pattern->length; i++)
+    power = (power * BASE) % PRIME;
 
+  int patternHash = hash(pattern);
+  int textHash = 0;
+  int j = 0;
+  int skippedCharacters = 0;
+  while (text->data[j] == '\n') {j++;}
+  for (int i = 0; i < text->length; i++) {
+    if (text->data[i] == '\n') {
+      skippedCharacters++;
+      continue;
+    }
+    textHash = hashAdd(textHash, text->data[i]);
+    if (i - skippedCharacters >= pattern->length) {
+      textHash = hashRemove(textHash, power, text->data[j++]);
+      while (text->data[j] == '\n') {j++;}
+    }
+    if (textHash == patternHash) {
+      listOfMatches[matchIndex++] = j + 1;
+    }
+
+  }
   return listOfMatches;
 }
 
@@ -248,7 +265,18 @@ int main(int argc, char const *argv[]) {
   printf("### Test poprawności działania algorytmu Knutha-Morrisa-Pratta ###\n");
   int *listOfMatches = KMP(text, pattern);
   printResults(text, listOfMatches);
+  listOfMatches = RB(text, pattern);
+  printResults(text, listOfMatches);
+  listOfMatches = N(text, pattern);
+  printResults(text, listOfMatches);
 
+  // printf("\n\n");
+  // listOfMatches = RB(text, pattern);
+  // printResults(text, listOfMatches);
+  // for (int i = 0; i < 10; i++) {
+  //   printf("%d\n", listOfMatches[i]);
+  // }
+  return 0;
   printf("\n### Test pomiaru czasu działania algorytmów ###\n");
   printf("1) Test algorytmu Knutha-Morrisa-Pratta:\n");
   printf(" ~ %fs\n", test(text, pattern, KMP));
