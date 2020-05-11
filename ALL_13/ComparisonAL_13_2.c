@@ -50,7 +50,7 @@ Array *load(FILE *file, int newLinePolicy(FILE *, char *)) {
 
   if (array == NULL || data == NULL) ThrowMemoryError();
 
-  // Wczytanie znaków do data
+  // Wczytanie znaków do tablicy data
   int patternLenght = newLinePolicy(file, data);
 
   array->data = data;
@@ -133,10 +133,13 @@ bool isMatching(Array *text, int index, Array *pattern) {
   return true;
 }
 
+// Funkcja dodająca do hasza kolejny znak
 int hashAdd(int oldHash, char newCharacter) {
   return (oldHash * BASE + newCharacter) % PRIME;
 }
 
+// Funkcja odejmująca od hasza dany znak, zgodnie z jego wagą określoną przez
+// power - w funkcji RB usuwa najstarszy znak z obecnego hasza
 int hashRemove(int oldHash, int power, char oldCharacter) {
   oldHash = (oldHash - power * oldCharacter) % PRIME;
   if (oldHash < 0) return oldHash + PRIME;
@@ -271,8 +274,10 @@ int main(int argc, char const *argv[]) {
 
   printf("### Test poprawności działania algorytmu Knutha-Morrisa-Pratta ###\n");
   printResults(text, KMP(text, pattern));
-  // printResults(text, RB(text, pattern));
-  // printResults(text, N(text, pattern));
+  printf("### Test poprawności działania algorytmu Rabina-Karpa ###\n");
+  printResults(text, RB(text, pattern));
+  printf("### Test poprawności działania algorytmu naiwnego ###\n");
+  printResults(text, N(text, pattern));
 
   printf("### Test pomiaru czasu działania algorytmów ###\n");
   printf("1) Test algorytmu Knutha-Morrisa-Pratta:\n");
