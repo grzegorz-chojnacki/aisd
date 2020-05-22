@@ -40,13 +40,17 @@ class Vertex {
 
 class DFS {
   public static List<Vertex> search(List<Vertex> vertices) {
+    System.out.println("Ścieżka przechodzenia grafu:");
     vertices.stream()
       .filter(Vertex::wasNotVisited)
       .forEach(u -> search(vertices, u));
+    System.out.println();
+    System.out.println();
     return vertices;
   }
 
   private static void search(List<Vertex> vertices, Vertex u) {
+    System.out.print(u.getKey() + " ");
     u.visit();
     for (Vertex v : u.getNeighbours()) {
       if (v.wasNotVisited()) {
@@ -61,9 +65,12 @@ class BFS {
   private static Queue<Vertex> queue = new LinkedList<>();
 
   public static List<Vertex> search(List<Vertex> vertices) {
+    System.out.println("Ścieżka przechodzenia grafu:");
     vertices.stream()
       .filter(Vertex::wasNotVisited)
       .forEach(u -> search(vertices, u));
+    System.out.println();
+    System.out.println();
     return vertices;
   }
 
@@ -72,6 +79,7 @@ class BFS {
     queue.add(s);
     while (!queue.isEmpty()) {
       Vertex u = queue.remove();
+      System.out.print(u.getKey() + " ");
       for (Vertex v : u.getNeighbours()) {
         if (v.wasNotVisited()) {
           v.visit();
@@ -86,7 +94,7 @@ class BFS {
 
 class GraphTraversal {
   private static void printNeighbourTable(List<Vertex> vertices) {
-    System.out.println("Wczytana tablica sąsiedztw: ");
+    System.out.println("Wczytane listy sąsiedztw: ");
     for (Vertex vertex : vertices) {
       System.out.print(vertex.getKey() + ": ");
       vertex.getNeighbours().stream()
