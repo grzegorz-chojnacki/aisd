@@ -217,10 +217,7 @@ public class Node {
     }
   }
 
-  // TODO: zabić
-  public void test() {
-
-  }
+  public void test() {}
 
   public void save(int index) {
     // System.out.print("Save " + index + ": ");
